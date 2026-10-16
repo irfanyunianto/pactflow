@@ -3,16 +3,16 @@ import React from 'react'
 type Variant = 'pending' | 'submitted' | 'approved' | 'released' | 'disputed' | 'refunded' | 'active' | 'completed' | 'cancelled' | 'neutral'
 
 const variantStyles: Record<Variant, React.CSSProperties> = {
-  pending:   { background: 'rgba(145,170,190,0.07)', color: '#9fb1c0', border: '1px solid rgba(145,170,190,0.18)' },
-  submitted: { background: 'rgba(89,132,166,0.10)', color: '#9cbcd2', border: '1px solid rgba(111,153,184,0.24)' },
-  approved:  { background: 'rgba(105,210,194,0.08)', color: '#8cddcf', border: '1px solid rgba(105,210,194,0.22)' },
-  released:  { background: 'rgba(105,210,194,0.09)', color: '#78d6b6', border: '1px solid rgba(105,210,194,0.24)' },
-  disputed:  { background: 'rgba(217,186,114,0.08)', color: '#d9ba72', border: '1px solid rgba(217,186,114,0.24)' },
-  refunded:  { background: 'rgba(145,170,190,0.06)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.16)' },
-  active:    { background: 'rgba(105,210,194,0.08)', color: '#8cddcf', border: '1px solid rgba(105,210,194,0.22)' },
-  completed: { background: 'rgba(105,210,194,0.09)', color: '#78d6b6', border: '1px solid rgba(105,210,194,0.24)' },
-  cancelled: { background: 'rgba(145,170,190,0.06)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.15)' },
-  neutral:   { background: 'rgba(145,170,190,0.05)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.14)' },
+  pending:   { background: '#eeeadf', color: '#635e6e', border: '1px solid rgba(55,49,72,0.16)' },
+  submitted: { background: '#e7e5f6', color: '#534796', border: '1px solid rgba(83,71,150,0.22)' },
+  approved:  { background: '#eee7fa', color: '#6548a6', border: '1px solid rgba(101,72,166,0.22)' },
+  released:  { background: '#e4f1e9', color: '#287554', border: '1px solid rgba(40,117,84,0.23)' },
+  disputed:  { background: '#f8e9df', color: '#984b24', border: '1px solid rgba(152,75,36,0.24)' },
+  refunded:  { background: '#ece8e1', color: '#625d68', border: '1px solid rgba(62,57,72,0.16)' },
+  active:    { background: '#e9e4f8', color: '#51419d', border: '1px solid rgba(81,65,157,0.22)' },
+  completed: { background: '#e4f1e9', color: '#287554', border: '1px solid rgba(40,117,84,0.23)' },
+  cancelled: { background: '#ece8e1', color: '#625d68', border: '1px solid rgba(62,57,72,0.16)' },
+  neutral:   { background: '#efebe3', color: '#625d68', border: '1px solid rgba(62,57,72,0.14)' },
 }
 
 interface BadgeProps {

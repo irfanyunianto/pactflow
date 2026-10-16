@@ -15,9 +15,7 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
     <header
       className="sticky top-0 z-40 border-b"
       style={{
-        background: 'rgba(7,17,29,0.86)',
-        backdropFilter: 'blur(22px) saturate(150%)',
-        WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+        background: 'rgba(248,244,236,0.96)',
         borderColor: 'var(--border)',
       }}
     >
@@ -35,7 +33,7 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
                 PactFlow
               </span>
               <span className="block text-[8px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--subtle)' }}>
-                Escrow protocol
+                Milestone workspace
               </span>
             </div>
           </motion.button>
@@ -69,9 +67,9 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
                 onClick={() => show?.()}
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold sm:px-4"
                 style={{
-                  borderColor: isConnected ? 'rgba(105,210,194,0.25)' : 'var(--border)',
-                  background: isConnected ? 'var(--accent-glow)' : 'rgba(255,255,255,0.035)',
-                  color: isConnected ? 'var(--accent)' : 'var(--ink-2)',
+                  borderColor: isConnected ? 'rgba(93,74,184,0.28)' : 'var(--border)',
+                  background: isConnected ? 'var(--accent-glow)' : 'var(--paper)',
+                  color: isConnected ? 'var(--accent-deep)' : 'var(--ink-2)',
                 }}
               >
                 <Wallet className="size-3.5" />

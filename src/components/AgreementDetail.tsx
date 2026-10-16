@@ -53,9 +53,9 @@ const MS = {
 
 // ── Role pill ─────────────────────────────────────────────────────────────────
 const ROLE_COLORS = {
-  funder:     { bg: 'rgba(148,180,204,0.09)', border: 'rgba(148,180,204,0.25)', text: '#b3c6d5' },
-  builder:    { bg: 'rgba(105,210,194,0.08)', border: 'rgba(105,210,194,0.25)', text: '#69d2c2' },
-  arbitrator: { bg: 'rgba(217,186,114,0.08)', border: 'rgba(217,186,114,0.24)', text: '#d9ba72' },
+  funder:     { bg: 'rgba(53,49,70,0.06)', border: 'rgba(53,49,70,0.2)', text: '#514c61' },
+  builder:    { bg: 'rgba(93,74,184,0.09)', border: 'rgba(93,74,184,0.25)', text: '#51409f' },
+  arbitrator: { bg: 'rgba(162,82,36,0.08)', border: 'rgba(162,82,36,0.24)', text: '#914820' },
   observer:   { bg: 'var(--surface)',          border: 'var(--border)',          text: 'var(--subtle)' },
 }
 
@@ -73,24 +73,24 @@ function RolePill({ role }: { role: 'funder' | 'builder' | 'arbitrator' | 'obser
 }
 
 // ── Milestone timeline dot ─────────────────────────────────────────────────────
-function TimelineDot({ status, isLast }: { status: MilestoneStatus | number; isLast: boolean }) {
+function TimelineDot({ status, isLast, index }: { status: MilestoneStatus | number; isLast: boolean; index: bigint }) {
   const s = Number(status)
   const color =
     s === MS.Released  ? 'var(--success)'  :
     s === MS.Disputed  ? 'var(--warning)'  :
     s === MS.Refunded  ? 'var(--subtle)'   :
     s === MS.Approved  ? 'var(--accent)'   :
-    s === MS.Submitted ? '#6f91ad'         :
+    s === MS.Submitted ? 'var(--violet)'   :
     'var(--border-strong)'
   return (
     <div className="relative flex shrink-0 flex-col items-center" style={{ width: 30 }}>
       <div
-        className="relative z-10 flex size-[30px] items-center justify-center rounded-full border"
-        style={{ background: '#0a1928', borderColor: color, boxShadow: `0 0 0 5px color-mix(in srgb, ${color} 8%, transparent)` }}
+        className="relative z-10 flex size-[30px] items-center justify-center rounded-md border font-mono text-[9px] font-semibold"
+        style={{ background: 'var(--paper)', borderColor: color, color }}
       >
         {(s === MS.Released || s === MS.Refunded) && <CheckCircle2 className="size-3" style={{ color }} />}
         {s === MS.Disputed && <AlertTriangle className="size-2.5" style={{ color }} />}
-        {s !== MS.Released && s !== MS.Refunded && s !== MS.Disputed && <Circle className="size-2.5" style={{ color }} />}
+        {s !== MS.Released && s !== MS.Refunded && s !== MS.Disputed && String(Number(index) + 1).padStart(2, '0')}
       </div>
       {!isLast && <div className="mt-1 w-px flex-1" style={{ background: 'linear-gradient(var(--border-strong), var(--border))', minHeight: 24 }} />}
     </div>
@@ -113,7 +113,7 @@ function SyncingBanner({ state, onRetry }: SyncingBannerProps) {
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.18 }}
           className="mb-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs"
-          style={{ background: 'rgba(172,198,233,0.07)', borderColor: 'rgba(172,198,233,0.2)', color: 'var(--muted)' }}
+          style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)', color: 'var(--muted)' }}
         >
           <Loader2 className="size-3 shrink-0 animate-spin" style={{ color: 'var(--accent)' }} />
           Updating balances…
@@ -135,7 +135,7 @@ function SyncingBanner({ state, onRetry }: SyncingBannerProps) {
           </span>
           <button
             onClick={onRetry}
-            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-white/5"
+            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-black/5"
             style={{ borderColor: 'var(--warning-border)', color: 'var(--warning)' }}
           >
             <RefreshCw className="size-3" />
@@ -170,7 +170,7 @@ function RefreshErrorBanner({ show, onRetry }: RefreshErrorBannerProps) {
           </span>
           <button
             onClick={onRetry}
-            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-white/5"
+            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-black/5"
             style={{ borderColor: 'var(--danger-border)', color: 'var(--danger)' }}
           >
             <RefreshCw className="size-3" />
@@ -414,8 +414,8 @@ function MilestoneRow({
   const busy = localBusy || parentBusy
 
   return (
-    <div className="flex gap-4">
-      <TimelineDot status={status} isLast={isLast} />
+    <div className="milestone-row flex gap-4">
+      <TimelineDot status={status} isLast={isLast} index={milestoneIndex} />
 
       <div className="min-w-0 flex-1 pb-4">
         <button
@@ -436,7 +436,7 @@ function MilestoneRow({
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--muted)' }}>
               <span className="tabular-nums font-medium" style={{ color: 'var(--ink-2)' }}>{formatUSDC(amount)} USDC</span>
               {deadlineTs > 0 && (
-                <span className={isPast && Number(status) === MS.Pending ? 'text-amber-400' : ''}>
+                <span style={isPast && Number(status) === MS.Pending ? { color: 'var(--warning)' } : undefined}>
                   <Clock className="mr-0.5 inline size-3" />
                   {formatTimestamp(deadlineTs)}
                   {isPast && Number(status) === MS.Pending ? ' (overdue)' : ''}
@@ -462,14 +462,14 @@ function MilestoneRow({
               className="overflow-hidden"
             >
               <div className="space-y-4 rounded-b-2xl border border-t-0 px-4 pb-4 pt-4 sm:px-5 sm:pb-5"
-                style={{ background: 'rgba(7,18,29,0.72)', borderColor: 'var(--border)' }}>
+                style={{ background: 'var(--paper-warm)', borderColor: 'var(--border)' }}>
 
                 {/* Syncing banner for this milestone */}
                 <SyncingBanner state={syncState} onRetry={() => { void handleRetry() }} />
 
                 {/* Evidence display */}
                 {evidenceUrlOnchain && (
-                  <div className="rounded-lg border p-3" style={{ background: 'rgba(172,198,233,0.05)', borderColor: 'rgba(172,198,233,0.2)' }}>
+                  <div className="rounded-lg border p-3" style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)' }}>
                     <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--subtle)' }}>
                       Evidence on-chain
                     </p>
@@ -484,7 +484,7 @@ function MilestoneRow({
                       <ExternalLink className="size-3 shrink-0 opacity-60" />
                     </a>
                     <p className="mt-2 rounded-md border px-2.5 py-1.5 text-xs"
-                      style={{ background: 'rgba(240,201,106,0.06)', borderColor: 'rgba(240,201,106,0.2)', color: 'var(--muted)' }}>
+                      style={{ background: 'var(--warning-bg)', borderColor: 'var(--warning-border)', color: 'var(--muted)' }}>
                       Evidence is an on-chain record only — it does not automatically prove quality. Only the funder can approve.
                     </p>
                   </div>
@@ -1029,7 +1029,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
         <p className="mt-1 text-xs" style={{ color: 'var(--muted)' }}>Check the network or try again.</p>
         <button
           onClick={() => { void refetchAgreement() }}
-          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
+          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
           style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
         >
           <RefreshCw className="size-3.5" /> Retry
@@ -1127,7 +1127,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
               {/* In Escrow now — only meaningful when funded and active */}
               {isFunded && isActive && (
                 <div className="mt-3 rounded-xl border px-3 py-2 text-right"
-                  style={{ background: 'rgba(105,210,194,0.045)', borderColor: 'rgba(105,210,194,0.16)' }}>
+                  style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.18)' }}>
                   <div className="text-xs font-semibold tabular-nums" style={{ color: 'var(--ink-2)' }}>
                     {escrowBalance !== undefined
                       ? `${formatUSDC(escrowBalance)} USDC`
@@ -1207,7 +1207,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
               {/* Status legend — active agreements only */}
               {isActive && (
                 <div className="mt-1.5 flex flex-wrap gap-3 text-[11px]" style={{ color: 'var(--subtle)' }}>
-                  {submittedCount > 0 && <span style={{ color: '#6b8db5' }}>{submittedCount} submitted</span>}
+                  {submittedCount > 0 && <span style={{ color: 'var(--violet)' }}>{submittedCount} submitted</span>}
                   {approvedCount  > 0 && <span style={{ color: 'var(--accent)' }}>{approvedCount} approved</span>}
                   {disputedCount  > 0 && <span style={{ color: 'var(--warning)' }}>{disputedCount} disputed</span>}
                   {releasedCount  > 0 && <span style={{ color: 'var(--success)' }}>{releasedCount} released</span>}
@@ -1232,7 +1232,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl"
                 style={{
-                  background: isCancelled ? 'rgba(255,255,255,0.05)' : 'rgba(141,216,159,0.15)',
+                  background: isCancelled ? 'var(--surface-muted)' : 'rgba(40,117,84,0.12)',
                 }}>
                 {isCancelled
                   ? <AlertTriangle className="size-4" style={{ color: 'var(--subtle)' }} />
@@ -1295,7 +1295,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
         {/* ── Fund escrow ─────────────────────────────────────────── */}
         {role === 'funder' && !isFunded && isActive && (
-          <div className="panel-flat mb-6 p-5 sm:p-6" style={{ background: 'rgba(105,210,194,0.035)', borderColor: 'rgba(105,210,194,0.2)' }}>
+          <div className="panel-flat mb-6 p-5 sm:p-6" style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.22)' }}>
             <h2 className="mb-1 text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>Fund Escrow</h2>
             <p className="mb-3 text-xs text-pretty" style={{ color: 'var(--muted)' }}>
               Deposit {formatUSDC(escrowCost)} USDC into the escrow contract to activate all milestones.
@@ -1326,7 +1326,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
           <div className="panel-flat mb-6 p-5" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-10 items-center justify-center rounded-xl" style={{ background: 'rgba(105,210,194,0.12)' }}>
+                <div className="flex size-10 items-center justify-center rounded-xl" style={{ background: 'var(--success-bg)' }}>
                   <Wallet2 className="size-[18px]" style={{ color: 'var(--success)' }} />
                 </div>
                 <div>

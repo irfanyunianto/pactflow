@@ -2,16 +2,28 @@ import React from 'react'
 
 interface BrandMarkProps {
   className?: string
+  monochrome?: boolean
 }
 
-export function BrandMark({ className = '' }: BrandMarkProps) {
+/** Two interlocking ribbons: the agreement and its controlled fund flow. */
+export function BrandMark({ className = '', monochrome = false }: BrandMarkProps) {
   return (
     <span className={`brand-mark ${className}`} aria-hidden="true">
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 4 34 12v16l-14 8-14-8V12l14-8Z" stroke="currentColor" strokeWidth="1.4" />
-        <path d="m10 14 10 5.8L30 14M10 25.8 20 20l10 5.8" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M20 9.4v21.2" stroke="currentColor" strokeWidth="1.4" />
-        <circle cx="20" cy="20" r="3.4" fill="currentColor" />
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M18 54V20.5C18 12.492 24.492 6 32.5 6H40c9.941 0 18 8.059 18 18s-8.059 18-18 18H29"
+          className="brand-mark__agreement"
+          strokeWidth="7.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M7 43V27.5C7 19.492 13.492 13 21.5 13H38c7.18 0 13 5.82 13 13s-5.82 13-13 13H28c-6.075 0-11 4.925-11 11v4"
+          className={monochrome ? 'brand-mark__agreement' : 'brand-mark__flow'}
+          strokeWidth="7.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </span>
   )
@@ -19,74 +31,77 @@ export function BrandMark({ className = '' }: BrandMarkProps) {
 
 export function EscrowFlowVisual() {
   return (
-    <div className="escrow-visual" aria-hidden="true">
-      <div className="escrow-visual__halo" />
-      <svg viewBox="0 0 560 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div
+      className="flow-demo"
+      role="img"
+      aria-label="Illustrative protocol sequence: the funder deposits USDC into escrow, a milestone is reviewed through separate approve and release decisions, and the builder can then claim the released balance. This is an explanation, not live transaction status."
+    >
+      <div className="flow-demo__header">
+        <span>Agreement map</span>
+        <span className="flow-demo__mode"><i /> Illustrative · not live</span>
+      </div>
+
+      <svg viewBox="0 0 680 368" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
-          <linearGradient id="flowLine" x1="80" y1="180" x2="480" y2="180" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#395878" />
-            <stop offset="0.5" stopColor="#69D2C2" />
-            <stop offset="1" stopColor="#395878" />
-          </linearGradient>
-          <linearGradient id="vaultFace" x1="218" y1="120" x2="342" y2="244" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#17304A" />
-            <stop offset="1" stopColor="#0A1726" />
-          </linearGradient>
-          <filter id="tealGlow" x="170" y="70" width="220" height="220" filterUnits="userSpaceOnUse">
-            <feGaussianBlur stdDeviation="18" />
-          </filter>
+          <marker id="flowArrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto">
+            <path d="M0 0 7 3.5 0 7" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          </marker>
         </defs>
 
-        <path d="M92 180H206M354 180h114" stroke="url(#flowLine)" strokeWidth="1.5" strokeDasharray="5 7" />
-        <path d="m194 174 12 6-12 6M456 174l12 6-12 6" stroke="#69D2C2" strokeWidth="1.5" />
+        <path className="flow-demo__guide" d="M136 180H218M310 180h74M490 180h74" />
+        <path className="flow-demo__arrow flow-demo__arrow--1" d="M136 180H218" markerEnd="url(#flowArrow)" />
+        <path className="flow-demo__arrow flow-demo__arrow--2" d="M310 180h74" markerEnd="url(#flowArrow)" />
+        <path className="flow-demo__arrow flow-demo__arrow--3" d="M490 180h74" markerEnd="url(#flowArrow)" />
 
-        <g opacity=".42" stroke="#5B7898">
-          <ellipse cx="280" cy="180" rx="190" ry="122" />
-          <ellipse cx="280" cy="180" rx="226" ry="154" strokeDasharray="2 9" />
+        <g className="flow-demo__node flow-demo__node--1">
+          <rect x="24" y="128" width="112" height="104" rx="6" />
+          <text className="flow-demo__index" x="40" y="151">01</text>
+          <circle cx="80" cy="176" r="15" />
+          <path d="M73 176h14M80 169v14" />
+          <text className="flow-demo__label" x="80" y="211" textAnchor="middle">FUNDER</text>
+          <text className="flow-demo__meta" x="80" y="247" textAnchor="middle">approve + deposit</text>
         </g>
 
-        <circle cx="280" cy="180" r="82" fill="#47C7B1" opacity=".08" filter="url(#tealGlow)" />
-
-        <g>
-          <rect x="214" y="114" width="132" height="132" rx="30" fill="url(#vaultFace)" stroke="#6F8CAA" strokeWidth="1.4" />
-          <rect x="226" y="126" width="108" height="108" rx="23" stroke="#274761" />
-          <circle cx="280" cy="180" r="31" fill="#0B1928" stroke="#69D2C2" strokeWidth="1.4" />
-          <circle cx="280" cy="180" r="18" stroke="#365F70" />
-          <path d="M280 162v8m0 20v8m-18-18h8m20 0h8" stroke="#69D2C2" strokeWidth="1.5" />
-          <circle cx="280" cy="180" r="4" fill="#C6FFF5" />
+        <g className="flow-demo__node flow-demo__node--2">
+          <rect x="218" y="108" width="92" height="144" rx="46" />
+          <path d="M242 198v-43a22 22 0 0 1 22-22h8a22 22 0 0 1 0 44h-15" />
+          <path className="flow-demo__violet" d="M235 190v-27a17 17 0 0 1 17-17h18a16 16 0 0 1 0 32h-11a15 15 0 0 0-15 15v8" />
+          <text className="flow-demo__label" x="264" y="226" textAnchor="middle">ESCROW</text>
+          <text className="flow-demo__meta" x="264" y="268" textAnchor="middle">contract holds USDC</text>
         </g>
 
-        <g>
-          <rect x="46" y="145" width="92" height="70" rx="18" fill="#0C1B2B" stroke="#34536F" />
-          <path d="M76 179h32m-25-12h18m-18 24h18" stroke="#AFC1D3" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="92" cy="180" r="27" stroke="#233D55" />
-          <text x="92" y="239" fill="#7F98AF" fontSize="10" textAnchor="middle" letterSpacing="2">FUNDER</text>
+        <g className="flow-demo__node flow-demo__node--3">
+          <rect x="384" y="88" width="106" height="184" rx="6" />
+          <text className="flow-demo__index" x="400" y="111">02 / 03</text>
+          <text className="flow-demo__label" x="400" y="142">MILESTONE REVIEW</text>
+          <rect className="flow-demo__review" x="400" y="158" width="74" height="32" rx="4" />
+          <text className="flow-demo__review-text" x="411" y="178">APPROVE</text>
+          <rect className="flow-demo__review" x="400" y="198" width="74" height="32" rx="4" />
+          <text className="flow-demo__review-text" x="411" y="218">RELEASE</text>
+          <path d="M463 168l4 4 7-9M463 208l4 4 7-9" />
+          <text className="flow-demo__meta" x="437" y="289" textAnchor="middle">two separate funder actions</text>
         </g>
 
-        <g>
-          <rect x="422" y="145" width="92" height="70" rx="18" fill="#0C1B2B" stroke="#34536F" />
-          <path d="m449 184 12 10 25-28" stroke="#69D2C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="468" y="239" fill="#7F98AF" fontSize="10" textAnchor="middle" letterSpacing="2">BUILDER</text>
+        <g className="flow-demo__node flow-demo__node--4">
+          <rect x="564" y="128" width="92" height="104" rx="6" />
+          <text className="flow-demo__index" x="580" y="151">04</text>
+          <path d="M583 168h52v30h-52zM595 168v-8h28v8M594 185h30" />
+          <circle cx="626" cy="185" r="2" />
+          <text className="flow-demo__label" x="610" y="215" textAnchor="middle">BUILDER</text>
+          <text className="flow-demo__meta" x="610" y="247" textAnchor="middle">claims balance</text>
         </g>
 
-        <g>
-          <circle cx="280" cy="43" r="5" fill="#69D2C2" />
-          <circle cx="280" cy="43" r="12" stroke="#69D2C2" opacity=".32" />
-          <path d="M280 55v39" stroke="#365A73" strokeDasharray="3 5" />
-          <text x="280" y="22" fill="#7F98AF" fontSize="10" textAnchor="middle" letterSpacing="2">ARBITRATION</text>
-        </g>
-
-        <g fill="#07111D" stroke="#4B6A85">
-          <circle cx="170" cy="86" r="7" />
-          <circle cx="390" cy="274" r="7" />
-          <circle cx="166" cy="280" r="5" />
+        <g className="flow-demo__note">
+          <path d="M24 324h632" />
+          <text x="24" y="346">EVIDENCE NEVER AUTO-APPROVES</text>
+          <text x="656" y="346" textAnchor="end">WALLET CONFIRMATION DEFINES REAL STATUS</text>
         </g>
       </svg>
 
-      <div className="escrow-visual__status">
-        <span /> Contract secured
+      <div className="flow-demo__caption">
+        <span>Protocol walkthrough</span>
+        <p>Funds become claimable only after review, approval, and a separate release transaction.</p>
       </div>
-      <div className="escrow-visual__caption">Funds move only when a milestone is approved and released.</div>
     </div>
   )
 }

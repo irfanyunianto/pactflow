@@ -33,7 +33,7 @@ export function TxReceipt({ hash, isSuccess, error, successLabel = 'Transaction 
                   href={buildTxUrl(hash)}
                   target="_blank" rel="noreferrer"
                   className="mt-0.5 inline-flex items-center gap-1 text-xs hover:underline"
-                  style={{ color: 'rgba(105,210,194,0.72)' }}
+                  style={{ color: 'var(--success)' }}
                 >
                   View on ArcScan <ExternalLink className="size-3" />
                 </a>

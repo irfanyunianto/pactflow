@@ -34,7 +34,7 @@ class ErrorBoundary extends Component<
       return (
         <div className="flex min-h-[60vh] items-center justify-center px-4">
           <div className="panel mx-auto max-w-sm p-7 text-center">
-            <AlertTriangle className="mx-auto mb-3 size-8 text-amber-400" />
+            <AlertTriangle className="mx-auto mb-3 size-8" style={{ color: 'var(--warning)' }} />
             <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               Something went wrong
             </p>
@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<
             </p>
             <button
               onClick={() => this.reset()}
-              className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
+              className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
               style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
             >
               <RefreshCw className="size-3.5" /> Go back to dashboard
@@ -70,7 +70,7 @@ function NotFound({ path, onHome }: { path: string; onHome: () => void }) {
         </p>
         <button
           onClick={onHome}
-          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
+          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
           style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
         >
           Go to dashboard

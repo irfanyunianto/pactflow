@@ -99,8 +99,7 @@ function HowItWorks() {
               style={{ borderColor: 'var(--border)' }}>
 
               {/* Funder */}
-              <div className="rounded-2xl border p-4"
-                style={{ background: 'rgba(101,139,173,0.055)', borderColor: 'var(--border)' }}>
+              <div className="border-l-2 py-1 pl-4" style={{ borderColor: 'var(--border-strong)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
                   <Lock className="size-3.5" style={{ color: 'var(--silver)' }} />
                   <span className="text-xs font-semibold" style={{ color: 'var(--silver)' }}>Funder</span>
@@ -111,8 +110,7 @@ function HowItWorks() {
               </div>
 
               {/* Builder */}
-              <div className="rounded-2xl border p-4"
-                style={{ background: 'rgba(105,210,194,0.045)', borderColor: 'var(--border)' }}>
+              <div className="border-l-2 py-1 pl-4" style={{ borderColor: 'var(--accent)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
                   <Banknote className="size-3.5" style={{ color: 'var(--accent)' }} />
                   <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>Builder</span>
@@ -123,8 +121,7 @@ function HowItWorks() {
               </div>
 
               {/* Arbitrator */}
-              <div className="rounded-2xl border p-4"
-                style={{ background: 'rgba(217,186,114,0.04)', borderColor: 'var(--border)' }}>
+              <div className="border-l-2 py-1 pl-4" style={{ borderColor: 'var(--warning)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
                   <Scale className="size-3.5" style={{ color: 'var(--warning)' }} />
                   <span className="text-xs font-semibold" style={{ color: 'var(--warning)' }}>Arbitrator</span>
@@ -135,8 +132,7 @@ function HowItWorks() {
               </div>
 
               {/* Claim note */}
-              <div className="rounded-2xl border p-4 sm:col-span-3"
-                style={{ background: 'rgba(255,255,255,0.018)', borderColor: 'var(--border)' }}>
+              <div className="border-t p-4 sm:col-span-3" style={{ borderColor: 'var(--border)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
                   <Wallet2 className="size-3.5" style={{ color: 'var(--accent)' }} />
                   <span className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Separate Claim Step</span>
@@ -228,7 +224,7 @@ function FilterTab({ label, active, count, onClick }: {
       onClick={onClick}
       className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
       style={active
-        ? { background: 'var(--accent-glow)', borderColor: 'rgba(105,210,194,0.34)', color: 'var(--accent)' }
+        ? { background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.32)', color: 'var(--accent-deep)' }
         : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }
       }
     >
@@ -237,7 +233,7 @@ function FilterTab({ label, active, count, onClick }: {
         <span
           className="flex size-4 items-center justify-center rounded-full text-[10px] tabular-nums"
           style={active
-            ? { background: 'rgba(105,210,194,0.14)', color: 'var(--accent)' }
+            ? { background: 'rgba(93,74,184,0.13)', color: 'var(--accent-deep)' }
             : { background: 'var(--surface-muted)', color: 'var(--subtle)' }
           }
         >
@@ -322,7 +318,7 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
       variants={stagger.item}
       onClick={() => onOpen(agreementId)}
       className="agreement-card group w-full p-5 text-left"
-      whileHover={{ borderColor: 'rgba(105,210,194,0.26)' }}
+      whileHover={{ borderColor: 'rgba(93,74,184,0.36)' }}
       whileTap={{ scale: 0.995 }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -365,7 +361,7 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
             <div className="mt-4 flex items-center gap-2">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--border)' }}>
                 <div
-                  className="h-full rounded-full"
+                  className="progress-fill h-full rounded-full"
                   style={{
                     width: `${Math.round(progress * 100)}%`,
                     background: progress === 1 ? 'var(--success)' : 'var(--accent)',
@@ -516,30 +512,30 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
         <AgreementLoader key={id.toString()} agreementId={id} onData={handleData} onError={handleError} />
       ))}
 
-      <section className="mb-7 grid items-center gap-7 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
+      <section className="mb-10 grid items-center gap-9 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
         <motion.div {...fadeUp} transition={{ duration: 0.32, ease }} className="py-2 lg:py-8">
           <span className="eyebrow">Milestone escrow · Arc Testnet</span>
-          <h1 className="display mt-5 max-w-[12ch] text-[2.7rem] font-semibold leading-[0.98] text-balance sm:text-6xl"
+          <h1 className="display mt-5 max-w-[11ch] text-[2.75rem] font-extrabold leading-[0.96] text-balance sm:text-6xl"
             style={{ color: 'var(--ink)' }}>
-            Work advances. Funds follow.
+            Fund the work. Review each release.
           </h1>
           <p className="mt-5 max-w-[56ch] text-[15px] leading-7 text-pretty sm:text-base" style={{ color: 'var(--muted)' }}>
-            Build agreements around verifiable milestones. Escrow USDC, review evidence, and release each payment only when the work is ready.
+            A deliberate workspace for milestone funding. Define the pact, escrow USDC, review evidence, then approve and release in two distinct steps.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
               onClick={onCreateAgreement}
               disabled={!isConnected}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: 'var(--accent)', color: '#fffdf8', boxShadow: '0 9px 20px rgba(73,57,149,0.14)' }}
             >
               <Plus className="size-4" /> Create agreement
             </button>
             <button
               onClick={() => document.getElementById('agreements')?.scrollIntoView()}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 text-sm font-semibold"
-              style={{ borderColor: 'var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--ink-2)' }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-5 text-sm font-semibold"
+              style={{ borderColor: 'var(--border)', background: 'var(--paper)', color: 'var(--ink-2)' }}
             >
               View live agreements <ArrowRight className="size-4" />
             </button>
@@ -647,7 +643,7 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: 'rgba(105,210,194,0.12)' }}>
+                  style={{ background: 'var(--success-bg)' }}>
                   <Wallet2 className="size-5" style={{ color: 'var(--success)' }} />
                 </div>
                 <div>
@@ -687,12 +683,12 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
         <button
           onClick={onCreateAgreement}
           disabled={!isConnected}
-          className="group flex w-full items-center gap-4 rounded-2xl border border-dashed p-4 text-left hover:bg-white/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
-          style={{ borderColor: isConnected ? 'rgba(105,210,194,0.26)' : 'var(--border)' }}
+          className="group flex w-full items-center gap-4 rounded-xl border border-dashed p-4 text-left hover:bg-black/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
+          style={{ borderColor: isConnected ? 'rgba(93,74,184,0.3)' : 'var(--border)', background: 'rgba(255,253,248,0.45)' }}
         >
           <div
             className="flex size-11 shrink-0 items-center justify-center rounded-xl border group-hover:scale-105"
-            style={{ background: 'var(--accent-glow)', borderColor: 'rgba(105,210,194,0.2)', transition: 'transform 0.18s ease' }}
+            style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)', transition: 'transform 0.18s ease' }}
           >
             <Plus className="size-5" style={{ color: 'var(--accent)' }} />
           </div>

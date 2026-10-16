@@ -59,7 +59,7 @@ function FunderDisplay({ address }: { address: string | undefined }) {
   if (!address) {
     return (
       <div className="mono rounded-xl border px-3.5 py-3 text-sm"
-        style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border)', color: 'var(--subtle)' }}>
+        style={{ background: 'var(--surface-muted)', borderColor: 'var(--border)', color: 'var(--subtle)' }}>
         Connect wallet
       </div>
     )
@@ -68,14 +68,14 @@ function FunderDisplay({ address }: { address: string | undefined }) {
   const short = `${address.slice(0, 8)}…${address.slice(-6)}`
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-xl border px-3.5 py-3"
-      style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border)' }}>
+      style={{ background: 'var(--paper)', borderColor: 'var(--border)' }}>
       <span className="mono min-w-0 flex-1 truncate text-sm" style={{ color: 'var(--muted)' }} title={address}>
         {short}
       </span>
       <button
         type="button"
         onClick={handleCopy}
-        className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
+        className="shrink-0 rounded-md p-1.5 hover:bg-black/5"
         style={{ color: copied ? 'var(--success)' : 'var(--subtle)' }}
         aria-label="Copy funder address"
         title={address}
@@ -242,7 +242,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
                 </div>
                 <button
                   onClick={addMilestone}
-                  className="flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-white/[0.03]"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-black/[0.03]"
                   style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
                 >
                   <Plus className="size-3.5" /> Add
@@ -257,8 +257,8 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
                     transition={{ duration: 0.22 }}
-                    className="relative z-10 mb-3 rounded-2xl border p-4 last:mb-0 sm:p-5"
-                    style={{ background: 'rgba(5,15,24,0.28)', borderColor: 'var(--border)' }}
+                    className="relative z-10 mb-3 rounded-xl border p-4 last:mb-0 sm:p-5"
+                    style={{ background: index % 2 === 0 ? 'var(--paper-warm)' : 'var(--paper)', borderColor: 'var(--border)' }}
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
@@ -327,7 +327,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
                             aria-label={`Milestone ${index + 1} deadline`}
                             onChange={event => updateMilestone(index, 'deadline', event.target.value)}
                             className="w-full rounded-xl border bg-transparent px-3.5 py-3 text-sm"
-                            style={{ borderColor: 'var(--border)', color: 'var(--ink)', colorScheme: 'dark' }}
+                            style={{ borderColor: 'var(--border)', color: 'var(--ink)', colorScheme: 'light' }}
                           />
                         </Field>
                       </div>
@@ -338,7 +338,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
             </section>
 
             <div className="flex gap-3 rounded-2xl border px-4 py-4"
-              style={{ background: 'rgba(105,210,194,0.035)', borderColor: 'rgba(105,210,194,0.16)' }}>
+              style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.18)' }}>
               <Info className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
               <p className="text-xs leading-5 text-pretty" style={{ color: 'var(--muted)' }}>
                 <strong style={{ color: 'var(--ink-2)' }}>Evidence stays under human review.</strong>
@@ -352,7 +352,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
               <div className="relative z-10">
                 <span className="eyebrow">Agreement preview</span>
                 <div className="mt-5 rounded-2xl border p-4"
-                  style={{ background: 'rgba(5,15,24,0.32)', borderColor: 'var(--border)' }}>
+                  style={{ background: 'var(--paper-warm)', borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--subtle)' }}>
                     Total to escrow
                   </p>

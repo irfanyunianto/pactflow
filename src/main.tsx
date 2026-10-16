@@ -51,16 +51,14 @@ const StudioWatermark = () => (
       fontSize: '10px',
       fontWeight: 600,
       fontFamily: 'system-ui, -apple-system, sans-serif',
-      color: '#91A7B8',
+      color: '#5f5a6d',
       textDecoration: 'none',
       cursor: 'pointer',
-      background: 'rgba(8, 21, 34, 0.88)',
-      backdropFilter: 'blur(14px) saturate(140%)',
-      WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+      background: 'rgba(255, 253, 248, 0.94)',
       borderRadius: '20px',
-      border: '1px solid rgba(151, 179, 201, 0.16)',
+      border: '1px solid rgba(38, 32, 59, 0.16)',
       zIndex: 30,
-      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.025)',
+      boxShadow: '0 8px 28px rgba(42, 35, 65, 0.08)',
     }}
   >
     <StudioLogo />
@@ -73,18 +71,18 @@ createRoot(document.getElementById('root')!).render(
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider
-          mode="dark"
+          mode="light"
           customTheme={{
             '--ck-font-family': "'DM Sans', sans-serif",
-            '--ck-primary-button-background': '#69d2c2',
-            '--ck-primary-button-color': '#07111d',
-            '--ck-primary-button-hover-background': '#84e5d6',
-            '--ck-secondary-button-background': '#10263a',
-            '--ck-secondary-button-color': '#e5edf2',
-            '--ck-body-background': '#0b1928',
-            '--ck-body-color': '#f1f5f7',
+            '--ck-primary-button-background': '#5d4ab8',
+            '--ck-primary-button-color': '#fffdf8',
+            '--ck-primary-button-hover-background': '#493995',
+            '--ck-secondary-button-background': '#f1eadc',
+            '--ck-secondary-button-color': '#211e32',
+            '--ck-body-background': '#fffdf8',
+            '--ck-body-color': '#211e32',
             '--ck-border-radius': '14px',
-            '--ck-overlay-background': 'rgba(2,8,14,0.82)',
+            '--ck-overlay-background': 'rgba(33,30,50,0.45)',
           }}
         >
           <App />
