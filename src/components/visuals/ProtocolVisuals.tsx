@@ -73,12 +73,13 @@ export function EscrowFlowVisual() {
         <g className="flow-demo__node flow-demo__node--3">
           <rect x="384" y="88" width="106" height="184" rx="6" />
           <text className="flow-demo__index" x="400" y="111">02 / 03</text>
-          <text className="flow-demo__label" x="400" y="142">MILESTONE REVIEW</text>
+          <text className="flow-demo__label" x="400" y="142">REVIEW</text>
           <rect className="flow-demo__review" x="400" y="158" width="74" height="32" rx="4" />
           <text className="flow-demo__review-text" x="411" y="178">APPROVE</text>
           <rect className="flow-demo__review" x="400" y="198" width="74" height="32" rx="4" />
           <text className="flow-demo__review-text" x="411" y="218">RELEASE</text>
-          <path d="M463 168l4 4 7-9M463 208l4 4 7-9" />
+          <path className="flow-demo__decision flow-demo__decision--approve" d="M459 169l4 4 7-9" />
+          <path className="flow-demo__decision flow-demo__decision--release" d="M459 209l4 4 7-9" />
           <text className="flow-demo__meta" x="437" y="289" textAnchor="middle">two separate funder actions</text>
         </g>
 
@@ -97,6 +98,20 @@ export function EscrowFlowVisual() {
           <text x="656" y="346" textAnchor="end">WALLET CONFIRMATION DEFINES REAL STATUS</text>
         </g>
       </svg>
+
+      <ol className="flow-demo__compact" aria-hidden="true">
+        {[
+          ['Funder deposits', 'Approve USDC spending, then fund the escrow.'],
+          ['Builder submits evidence', 'The contract holds USDC while the work is reviewed.'],
+          ['Funder approves + releases', 'Two separate transactions make funds claimable.'],
+          ['Builder withdraws', 'Released funds are pulled from the claimable balance.'],
+        ].map(([title, description], index) => (
+          <li key={title}>
+            <b style={{ '--step-delay': `${index * 0.45}s` } as React.CSSProperties}>{String(index + 1).padStart(2, '0')}</b>
+            <div><strong>{title}</strong><small>{description}</small></div>
+          </li>
+        ))}
+      </ol>
 
       <div className="flow-demo__caption">
         <span>Protocol walkthrough</span>
@@ -128,6 +143,21 @@ export function ResolutionDial({ progress, label = 'resolved' }: ResolutionDialP
       </svg>
       <span className="resolution-dial__number">{safeProgress}%</span>
       <span className="resolution-dial__label">{label}</span>
+    </div>
+  )
+}
+
+/** Displays the observed on-chain status; never advances itself on a timer. */
+export function MilestoneRail({ status }: { status: number }) {
+  const labels = ['Pending', 'Evidence', 'Approved', 'Released']
+  if (status < 0 || status > 3) return null
+  return (
+    <div className="milestone-rail" aria-label={`Milestone stage: ${labels[status]}`}>
+      {labels.map((label, index) => (
+        <span key={label} data-current={index === status} aria-current={index === status ? 'step' : undefined}>
+          <i key={`${label}-${status}`} />{label}
+        </span>
+      ))}
     </div>
   )
 }

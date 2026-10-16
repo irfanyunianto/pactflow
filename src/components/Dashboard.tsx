@@ -528,7 +528,7 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
               onClick={onCreateAgreement}
               disabled={!isConnected}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: 'var(--accent)', color: '#fffdf8', boxShadow: '0 9px 20px rgba(73,57,149,0.14)' }}
+              style={{ background: 'var(--action)', color: '#f4effa', boxShadow: '0 9px 20px rgba(73,57,149,0.14)' }}
             >
               <Plus className="size-4" /> Create agreement
             </button>
@@ -683,8 +683,8 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
         <button
           onClick={onCreateAgreement}
           disabled={!isConnected}
-          className="group flex w-full items-center gap-4 rounded-xl border border-dashed p-4 text-left hover:bg-black/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
-          style={{ borderColor: isConnected ? 'rgba(93,74,184,0.3)' : 'var(--border)', background: 'rgba(255,253,248,0.45)' }}
+          className="group flex w-full items-center gap-4 rounded-xl border border-dashed p-4 text-left hover:bg-white/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
+          style={{ borderColor: isConnected ? 'rgba(93,74,184,0.3)' : 'var(--border)', background: 'var(--surface)' }}
         >
           <div
             className="flex size-11 shrink-0 items-center justify-center rounded-xl border group-hover:scale-105"

@@ -51,12 +51,12 @@ const StudioWatermark = () => (
       fontSize: '10px',
       fontWeight: 600,
       fontFamily: 'system-ui, -apple-system, sans-serif',
-      color: '#5f5a6d',
+      color: '#b9b0c4',
       textDecoration: 'none',
       cursor: 'pointer',
-      background: 'rgba(255, 253, 248, 0.94)',
+      background: 'var(--paper)',
       borderRadius: '20px',
-      border: '1px solid rgba(38, 32, 59, 0.16)',
+      border: '1px solid var(--border)',
       zIndex: 30,
       boxShadow: '0 8px 28px rgba(42, 35, 65, 0.08)',
     }}
@@ -71,23 +71,23 @@ createRoot(document.getElementById('root')!).render(
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider
-          mode="light"
+          mode="dark"
           customTheme={{
             '--ck-font-family': "'DM Sans', sans-serif",
-            '--ck-primary-button-background': '#5d4ab8',
-            '--ck-primary-button-color': '#fffdf8',
-            '--ck-primary-button-hover-background': '#493995',
-            '--ck-secondary-button-background': '#f1eadc',
-            '--ck-secondary-button-color': '#211e32',
-            '--ck-body-background': '#fffdf8',
-            '--ck-body-color': '#211e32',
+            '--ck-primary-button-background': '#7952b6',
+            '--ck-primary-button-color': '#f4effa',
+            '--ck-primary-button-hover-background': '#8c63c9',
+            '--ck-secondary-button-background': '#2b2632',
+            '--ck-secondary-button-color': '#f0edf4',
+            '--ck-body-background': '#242127',
+            '--ck-body-color': '#f0edf4',
             '--ck-border-radius': '14px',
             '--ck-overlay-background': 'rgba(33,30,50,0.45)',
           }}
         >
           <App />
           <StudioWatermark />
-          <Toaster position="top-center" />
+          <Toaster position="top-center" theme="dark" />
         </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

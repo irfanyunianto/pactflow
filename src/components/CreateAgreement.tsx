@@ -75,7 +75,7 @@ function FunderDisplay({ address }: { address: string | undefined }) {
       <button
         type="button"
         onClick={handleCopy}
-        className="shrink-0 rounded-md p-1.5 hover:bg-black/5"
+        className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
         style={{ color: copied ? 'var(--success)' : 'var(--subtle)' }}
         aria-label="Copy funder address"
         title={address}
@@ -242,7 +242,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
                 </div>
                 <button
                   onClick={addMilestone}
-                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-black/[0.03]"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-white/[0.03]"
                   style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
                 >
                   <Plus className="size-3.5" /> Add

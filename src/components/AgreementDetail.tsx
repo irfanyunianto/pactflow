@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, ExternalLink, AlertTriangle, CheckCircle2,
   Clock, Wallet2, Shield, ChevronDown, ChevronUp, Link2,
-  RefreshCw, CircleDot, Circle, Loader2, Copy, Check,
+  RefreshCw, CircleDot, Loader2, Copy, Check,
 } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { toast } from 'sonner'
@@ -32,7 +32,7 @@ import { TxReceipt } from '@/components/ui/TxReceipt'
 import { formatUSDC, formatUSDCOrZero, shortenAddress, formatTimestamp } from '@/utils/format'
 import { AgreementStatus, MilestoneStatus, buildAddressUrl, PACTFLOW_ADDRESS } from '@/contracts/pactflow'
 import type { AgreementData, MilestoneData } from '@/types/pactflow'
-import { ResolutionDial } from '@/components/visuals/ProtocolVisuals'
+import { ResolutionDial, MilestoneRail } from '@/components/visuals/ProtocolVisuals'
 
 
 // SyncState drives the SyncingBanner.
@@ -53,9 +53,9 @@ const MS = {
 
 // ── Role pill ─────────────────────────────────────────────────────────────────
 const ROLE_COLORS = {
-  funder:     { bg: 'rgba(53,49,70,0.06)', border: 'rgba(53,49,70,0.2)', text: '#514c61' },
-  builder:    { bg: 'rgba(93,74,184,0.09)', border: 'rgba(93,74,184,0.25)', text: '#51409f' },
-  arbitrator: { bg: 'rgba(162,82,36,0.08)', border: 'rgba(162,82,36,0.24)', text: '#914820' },
+  funder:     { bg: 'var(--surface-muted)', border: 'rgba(53,49,70,0.2)', text: '#ccc1d8' },
+  builder:    { bg: 'rgba(93,74,184,0.09)', border: 'rgba(93,74,184,0.25)', text: '#c9aff6' },
+  arbitrator: { bg: 'rgba(162,82,36,0.08)', border: 'rgba(162,82,36,0.24)', text: '#e5b07e' },
   observer:   { bg: 'var(--surface)',          border: 'var(--border)',          text: 'var(--subtle)' },
 }
 
@@ -85,7 +85,9 @@ function TimelineDot({ status, isLast, index }: { status: MilestoneStatus | numb
   return (
     <div className="relative flex shrink-0 flex-col items-center" style={{ width: 30 }}>
       <div
-        className="relative z-10 flex size-[30px] items-center justify-center rounded-md border font-mono text-[9px] font-semibold"
+        key={s}
+        data-active={s === MS.Submitted || s === MS.Approved}
+        className="timeline-status relative z-10 flex size-[30px] items-center justify-center rounded-md border font-mono text-[9px] font-semibold"
         style={{ background: 'var(--paper)', borderColor: color, color }}
       >
         {(s === MS.Released || s === MS.Refunded) && <CheckCircle2 className="size-3" style={{ color }} />}
@@ -135,7 +137,7 @@ function SyncingBanner({ state, onRetry }: SyncingBannerProps) {
           </span>
           <button
             onClick={onRetry}
-            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-black/5"
+            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-white/5"
             style={{ borderColor: 'var(--warning-border)', color: 'var(--warning)' }}
           >
             <RefreshCw className="size-3" />
@@ -170,7 +172,7 @@ function RefreshErrorBanner({ show, onRetry }: RefreshErrorBannerProps) {
           </span>
           <button
             onClick={onRetry}
-            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-black/5"
+            className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-white/5"
             style={{ borderColor: 'var(--danger-border)', color: 'var(--danger)' }}
           >
             <RefreshCw className="size-3" />
@@ -466,6 +468,8 @@ function MilestoneRow({
 
                 {/* Syncing banner for this milestone */}
                 <SyncingBanner state={syncState} onRetry={() => { void handleRetry() }} />
+
+                <MilestoneRail status={Number(status)} />
 
                 {/* Evidence display */}
                 {evidenceUrlOnchain && (
@@ -1029,7 +1033,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
         <p className="mt-1 text-xs" style={{ color: 'var(--muted)' }}>Check the network or try again.</p>
         <button
           onClick={() => { void refetchAgreement() }}
-          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
+          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
           style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
         >
           <RefreshCw className="size-3.5" /> Retry

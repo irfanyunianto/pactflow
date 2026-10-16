@@ -30,7 +30,7 @@ export function DemoModeBanner({ visible, onDismiss }: DemoModeBannerProps) {
             </p>
             <button
               onClick={onDismiss}
-              className="shrink-0 rounded-md p-1.5 hover:bg-black/5"
+              className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
               style={{ color: 'var(--subtle)' }}
               aria-label="Dismiss read-only mode notice"
             >

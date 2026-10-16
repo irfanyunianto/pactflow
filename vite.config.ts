@@ -11,6 +11,11 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom'],
   },
+  // Limit simultaneous file work on memory-constrained build machines.
+  // All modules are still transformed, tree-shaken and minified by Vite.
+  build: {
+    rollupOptions: { maxParallelFileOps: 32 },
+  },
   optimizeDeps: {
     include: [
       'react',

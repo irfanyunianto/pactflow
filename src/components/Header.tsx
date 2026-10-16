@@ -15,7 +15,7 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
     <header
       className="sticky top-0 z-40 border-b"
       style={{
-        background: 'rgba(248,244,236,0.96)',
+        background: 'var(--header-bg)',
         borderColor: 'var(--border)',
       }}
     >
@@ -32,7 +32,7 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
               <span className="display block text-[15px] font-bold leading-tight" style={{ color: 'var(--ink)' }}>
                 PactFlow
               </span>
-              <span className="block text-[8px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--subtle)' }}>
+              <span className="hidden text-[8px] font-bold min-[380px]:block uppercase tracking-[0.18em]" style={{ color: 'var(--subtle)' }}>
                 Milestone workspace
               </span>
             </div>

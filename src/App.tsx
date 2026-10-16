@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<
             </p>
             <button
               onClick={() => this.reset()}
-              className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
+              className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
               style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
             >
               <RefreshCw className="size-3.5" /> Go back to dashboard
@@ -70,7 +70,7 @@ function NotFound({ path, onHome }: { path: string; onHome: () => void }) {
         </p>
         <button
           onClick={onHome}
-          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
+          className="mx-auto mt-4 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
           style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
         >
           Go to dashboard

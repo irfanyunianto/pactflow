@@ -34,9 +34,9 @@ export function TxButton({
 
   const styles: Record<string, React.CSSProperties> = {
     primary: {
-      background: 'var(--accent)',
+      background: 'var(--action)',
       border: '1px solid var(--accent)',
-      color: '#fffdf8',
+      color: '#f4effa',
       boxShadow: '0 8px 20px rgba(73,57,149,0.14)',
     },
     danger: {
@@ -54,7 +54,7 @@ export function TxButton({
   const hoverStyles: Record<string, string> = {
     primary: 'hover:brightness-105 hover:-translate-y-px',
     danger:  'hover:brightness-110',
-    ghost:   'hover:bg-black/5',
+    ghost:   'hover:bg-white/5',
   }
 
   if (!isConnected) {
