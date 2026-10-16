@@ -344,14 +344,8 @@ input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 
 .flow-demo > svg { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
 .flow-demo__guide { stroke: rgba(213, 197, 234, 0.16); stroke-width: 1.25; stroke-dasharray: 3 7; }
-.flow-demo__arrow { color: var(--accent); stroke: currentColor; stroke-width: 1.35; stroke-dasharray: 112; animation: explain-line 7.2s ease-in-out infinite; }
-.flow-demo__arrow--2 { animation-delay: 0.45s; }
-.flow-demo__arrow--3 { animation-delay: 0.9s; }
-
-.flow-demo__node { color: var(--ink-2); animation: explain-node 7.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-.flow-demo__node--2 { animation-delay: 0.35s; }
-.flow-demo__node--3 { animation-delay: 0.7s; }
-.flow-demo__node--4 { animation-delay: 1.05s; }
+.flow-demo__arrow { color: var(--accent); stroke: currentColor; stroke-width: 1.35; opacity: 0.48; }
+.flow-demo__node { color: var(--ink-2); }
 .flow-demo__node > rect, .flow-demo__node > circle { fill: #242127; stroke: rgba(213, 197, 234, 0.33); stroke-width: 1.2; }
 .flow-demo__node > path { stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .flow-demo__violet { color: var(--accent); stroke-width: 3 !important; }
@@ -403,8 +397,6 @@ input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 }
 
 @keyframes progress-enter { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes explain-line { 0%, 12% { stroke-dashoffset: 112; opacity: 0.25; } 35%, 75% { stroke-dashoffset: 0; opacity: 0.9; } 100% { stroke-dashoffset: -112; opacity: 0.25; } }
-@keyframes explain-node { 0%, 100% { opacity: 0.68; transform: translateY(0); } 18%, 42% { opacity: 1; transform: translateY(-2px); } 62% { opacity: 0.82; transform: translateY(0); } }
 @keyframes skeleton-sweep { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -439,25 +431,81 @@ input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity
   }
 }
 
-/* The compact walkthrough preserves readable labels without sideways scrolling. */
-.flow-demo__compact { display: none; position: relative; list-style: none; margin: 0; padding: 1.25rem; }
-.flow-demo__compact li { position: relative; display: grid; grid-template-columns: 2rem 1fr; gap: 0.8rem; padding-bottom: 1.4rem; }
-.flow-demo__compact li:last-child { padding-bottom: 0; }
-.flow-demo__compact li:not(:last-child)::before { content: ''; position: absolute; left: 0.95rem; top: 2rem; bottom: 0; width: 1px; background: var(--border-strong); }
-.flow-demo__compact b { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--border-strong); border-radius: 0.4rem; color: var(--accent-deep); font: 0.65rem 'JetBrains Mono', monospace; animation: explain-node 7.2s ease-in-out infinite; animation-delay: var(--step-delay); }
-.flow-demo__compact strong { display: block; color: var(--ink); font-size: 0.8rem; }
-.flow-demo__compact small { display: block; color: var(--muted); font-size: 0.7rem; line-height: 1.6; margin-top: 0.2rem; }
+/* A 16s illustrative sequence. No timers, live state, glow, or layout animation. */
+.flow-demo { --flow-cycle: 16s; }
+.flow-demo__phase--fund { --phase-animation: flow-fund; }
+.flow-demo__phase--hold { --phase-animation: flow-hold; }
+.flow-demo__phase--approve { --phase-animation: flow-approve; }
+.flow-demo__phase--release { --phase-animation: flow-release; }
+.flow-demo__phase--claim { --phase-animation: flow-claim; }
+.flow-demo__node > .flow-demo__highlight {
+  fill: rgba(161, 124, 219, 0.17);
+  stroke: var(--accent);
+  stroke-width: 2;
+  opacity: 0;
+  animation: var(--phase-animation) var(--flow-cycle) ease-in-out infinite;
+}
+.flow-demo__transfer { fill: var(--accent); stroke: #242127; stroke-width: 1.5; opacity: 0; }
+.flow-demo__transfer--deposit { animation: flow-deposit var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__transfer--release { animation: flow-to-review var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__transfer--claim { animation: flow-to-builder var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__held, .flow-demo__claimable { fill: var(--accent); font: 700 9px 'JetBrains Mono', monospace; letter-spacing: 0.06em; opacity: 0; }
+.flow-demo__held { animation: flow-held-label var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__claimable { animation: flow-claim var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__stages { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; list-style: none; margin: 0; padding: 0 1rem 1.1rem; }
+.flow-demo__stages li { position: relative; padding: 0.65rem 0.4rem; border: 1px solid var(--border); border-radius: 0.4rem; }
+.flow-demo__stages li::before { content: ''; position: absolute; inset: -1px; border: 1px solid var(--accent); border-radius: inherit; background: rgba(161, 124, 219, 0.12); opacity: 0; animation: var(--phase-animation) var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__stages b { position: relative; display: block; color: var(--accent); font: 0.58rem 'JetBrains Mono', monospace; margin-bottom: 0.4rem; }
+.flow-demo__stages strong { position: relative; display: block; color: var(--ink); font-size: 0.6rem; font-weight: 600; }
+.flow-demo__stages small { display: none; }
+
+/* Broad holds and soft handoffs make each separate decision legible. */
+@keyframes flow-fund { 0%, 18%, 100% { opacity: 0; } 3%, 15% { opacity: 1; } }
+@keyframes flow-hold { 0%, 17%, 40%, 100% { opacity: 0; } 21%, 36% { opacity: 1; } }
+@keyframes flow-approve { 0%, 37%, 59%, 100% { opacity: 0; } 41%, 55% { opacity: 1; } }
+@keyframes flow-release { 0%, 56%, 80%, 100% { opacity: 0; } 60%, 76% { opacity: 1; } }
+@keyframes flow-claim { 0%, 81%, 100% { opacity: 0; } 85%, 97% { opacity: 1; } }
+@keyframes flow-deposit {
+  0%, 5% { opacity: 0; transform: translateX(0); }
+  7% { opacity: 1; transform: translateX(0); }
+  17% { opacity: 1; transform: translateX(82px); }
+  20%, 100% { opacity: 0; transform: translateX(82px); }
+}
+@keyframes flow-to-review {
+  0%, 66% { opacity: 0; transform: translateX(0); }
+  68% { opacity: 1; transform: translateX(0); }
+  75% { opacity: 1; transform: translateX(74px); }
+  77%, 100% { opacity: 0; transform: translateX(74px); }
+}
+@keyframes flow-to-builder {
+  0%, 75% { opacity: 0; transform: translateX(0); }
+  77% { opacity: 1; transform: translateX(0); }
+  83% { opacity: 1; transform: translateX(74px); }
+  85%, 100% { opacity: 0; transform: translateX(74px); }
+}
+@keyframes flow-held-label { 0%, 18%, 73%, 100% { opacity: 0; } 22%, 67% { opacity: 1; } }
+@keyframes flow-approved { 0%, 41%, 100% { opacity: 0; stroke-dashoffset: 20; } 46%, 97% { opacity: 1; stroke-dashoffset: 0; } }
+@keyframes flow-released { 0%, 60%, 100% { opacity: 0; stroke-dashoffset: 20; } 65%, 97% { opacity: 1; stroke-dashoffset: 0; } }
+@media (max-width: 639px) {
+  .flow-demo__stages { grid-template-columns: 1fr; padding: 1rem; gap: 0.5rem; }
+  .flow-demo__stages li { display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.65rem; padding: 0.7rem; }
+  .flow-demo__stages b { margin: 0.15rem 0 0; }
+  .flow-demo__stages strong { font-size: 0.75rem; }
+  .flow-demo__stages small { position: relative; display: block; color: var(--muted); font-size: 0.68rem; line-height: 1.6; margin-top: 0.25rem; }
+}
 .timeline-status { animation: milestone-enter 360ms ease-out both; }
 .timeline-status[data-active='true'] { box-shadow: inset 0 0 0 2px var(--accent-glow); }
 @keyframes milestone-enter { from { opacity: 0.35; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
-@media (max-width: 639px) { .flow-demo__compact { display: block; } }
 
-.flow-demo__decision { stroke: var(--accent-deep) !important; stroke-dasharray: 20; animation: decision-draw 7.2s ease-in-out infinite; }
-.flow-demo__decision--release { animation-delay: 0.8s; }
-@keyframes decision-draw { 0%, 32% { stroke-dashoffset: 20; opacity: 0; } 48%, 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 20; opacity: 0; } }
+.flow-demo__decision { stroke: var(--accent) !important; stroke-dasharray: 20; stroke-dashoffset: 20; opacity: 0; }
+.flow-demo__decision--approve { animation: flow-approved var(--flow-cycle) ease-in-out infinite; }
+.flow-demo__decision--release { animation: flow-released var(--flow-cycle) ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .flow-demo__arrow, .flow-demo__decision { animation: none !important; stroke-dashoffset: 0; opacity: 1; }
-  .flow-demo__node, .flow-demo__compact b { animation: none !important; opacity: 1; }
+  .flow-demo__highlight, .flow-demo__transfer, .flow-demo__held, .flow-demo__claimable,
+  .flow-demo__decision, .flow-demo__stages li::before { animation: none !important; }
+  .flow-demo__transfer, .flow-demo__held { opacity: 0; }
+  .flow-demo__node > .flow-demo__highlight, .flow-demo__stages li::before { opacity: 0.25; }
+  .flow-demo__decision, .flow-demo__claimable { stroke-dashoffset: 0; opacity: 1; }
 }
 
 .milestone-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; padding-block: 0.35rem 0.75rem; }

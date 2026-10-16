@@ -34,7 +34,7 @@ export function EscrowFlowVisual() {
     <div
       className="flow-demo"
       role="img"
-      aria-label="Illustrative protocol sequence: the funder deposits USDC into escrow, a milestone is reviewed through separate approve and release decisions, and the builder can then claim the released balance. This is an explanation, not live transaction status."
+      aria-label="Illustrative protocol sequence: the funder deposits USDC into escrow, a milestone is reviewed through separate approve and release decisions, funds stay in escrow until the separate release transaction makes a balance claimable for the builder. Withdrawal is another separate transaction. This is an explanation, not live transaction status."
     >
       <div className="flow-demo__header">
         <span>Agreement map</span>
@@ -55,28 +55,33 @@ export function EscrowFlowVisual() {
 
         <g className="flow-demo__node flow-demo__node--1">
           <rect x="24" y="128" width="112" height="104" rx="6" />
+          <rect className="flow-demo__highlight flow-demo__phase--fund" x="24" y="128" width="112" height="104" rx="6" />
           <text className="flow-demo__index" x="40" y="151">01</text>
           <circle cx="80" cy="176" r="15" />
           <path d="M73 176h14M80 169v14" />
           <text className="flow-demo__label" x="80" y="211" textAnchor="middle">FUNDER</text>
-          <text className="flow-demo__meta" x="80" y="247" textAnchor="middle">approve + deposit</text>
+          <text className="flow-demo__meta" x="80" y="247" textAnchor="middle">deposit USDC</text>
         </g>
 
         <g className="flow-demo__node flow-demo__node--2">
           <rect x="218" y="108" width="92" height="144" rx="46" />
+          <rect className="flow-demo__highlight flow-demo__phase--hold" x="218" y="108" width="92" height="144" rx="46" />
           <path d="M242 198v-43a22 22 0 0 1 22-22h8a22 22 0 0 1 0 44h-15" />
           <path className="flow-demo__violet" d="M235 190v-27a17 17 0 0 1 17-17h18a16 16 0 0 1 0 32h-11a15 15 0 0 0-15 15v8" />
+          <text className="flow-demo__held" x="264" y="85" textAnchor="middle">USDC HELD</text>
           <text className="flow-demo__label" x="264" y="226" textAnchor="middle">ESCROW</text>
           <text className="flow-demo__meta" x="264" y="268" textAnchor="middle">contract holds USDC</text>
         </g>
 
         <g className="flow-demo__node flow-demo__node--3">
           <rect x="384" y="88" width="106" height="184" rx="6" />
-          <text className="flow-demo__index" x="400" y="111">02 / 03</text>
+          <text className="flow-demo__index" x="400" y="111">03 / 04</text>
           <text className="flow-demo__label" x="400" y="142">REVIEW</text>
           <rect className="flow-demo__review" x="400" y="158" width="74" height="32" rx="4" />
+          <rect className="flow-demo__highlight flow-demo__phase--approve" x="400" y="158" width="74" height="32" rx="4" />
           <text className="flow-demo__review-text" x="411" y="178">APPROVE</text>
           <rect className="flow-demo__review" x="400" y="198" width="74" height="32" rx="4" />
+          <rect className="flow-demo__highlight flow-demo__phase--release" x="400" y="198" width="74" height="32" rx="4" />
           <text className="flow-demo__review-text" x="411" y="218">RELEASE</text>
           <path className="flow-demo__decision flow-demo__decision--approve" d="M459 169l4 4 7-9" />
           <path className="flow-demo__decision flow-demo__decision--release" d="M459 209l4 4 7-9" />
@@ -85,12 +90,19 @@ export function EscrowFlowVisual() {
 
         <g className="flow-demo__node flow-demo__node--4">
           <rect x="564" y="128" width="92" height="104" rx="6" />
-          <text className="flow-demo__index" x="580" y="151">04</text>
+          <rect className="flow-demo__highlight flow-demo__phase--claim" x="564" y="128" width="92" height="104" rx="6" />
+          <text className="flow-demo__index" x="580" y="151">05</text>
           <path d="M583 168h52v30h-52zM595 168v-8h28v8M594 185h30" />
           <circle cx="626" cy="185" r="2" />
+          <text className="flow-demo__claimable" x="610" y="105" textAnchor="middle">CLAIMABLE</text>
           <text className="flow-demo__label" x="610" y="215" textAnchor="middle">BUILDER</text>
-          <text className="flow-demo__meta" x="610" y="247" textAnchor="middle">claims balance</text>
+          <text className="flow-demo__meta" x="610" y="247" textAnchor="middle">claimable balance</text>
         </g>
+
+        {/* One shared CSS clock keeps funds, decisions, and highlights in order. */}
+        <circle className="flow-demo__transfer flow-demo__transfer--deposit" cx="136" cy="180" r="4.5" />
+        <circle className="flow-demo__transfer flow-demo__transfer--release" cx="310" cy="180" r="4.5" />
+        <circle className="flow-demo__transfer flow-demo__transfer--claim" cx="490" cy="180" r="4.5" />
 
         <g className="flow-demo__note">
           <path d="M24 324h632" />
@@ -99,15 +111,16 @@ export function EscrowFlowVisual() {
         </g>
       </svg>
 
-      <ol className="flow-demo__compact" aria-hidden="true">
+      <ol className="flow-demo__stages" aria-hidden="true">
         {[
-          ['Funder deposits', 'Approve USDC spending, then fund the escrow.'],
-          ['Builder submits evidence', 'The contract holds USDC while the work is reviewed.'],
-          ['Funder approves + releases', 'Two separate transactions make funds claimable.'],
-          ['Builder withdraws', 'Released funds are pulled from the claimable balance.'],
-        ].map(([title, description], index) => (
-          <li key={title}>
-            <b style={{ '--step-delay': `${index * 0.45}s` } as React.CSSProperties}>{String(index + 1).padStart(2, '0')}</b>
+          ['fund', 'Fund escrow', 'USDC moves from the funder into escrow.'],
+          ['hold', 'Funds held', 'Escrow holds USDC while evidence is reviewed.'],
+          ['approve', 'Approve', 'The funder approves the milestone. Funds stay in escrow.'],
+          ['release', 'Release', 'A separate funder transaction makes funds claimable.'],
+          ['claim', 'Claimable', 'The builder can withdraw in a separate transaction.'],
+        ].map(([phase, title, description], index) => (
+          <li key={phase} className={`flow-demo__phase--${phase}`}>
+            <b>{String(index + 1).padStart(2, '0')}</b>
             <div><strong>{title}</strong><small>{description}</small></div>
           </li>
         ))}

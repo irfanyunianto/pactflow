@@ -1,23 +1,25 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ArrowRight, Wallet2, AlertTriangle, Layers, Lock,
   CheckCircle2, ChevronDown, ChevronUp, Users, Scale, Banknote,
   ShieldCheck, FileCheck2,
 } from 'lucide-react'
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContracts } from 'wagmi'
+import type { Abi } from 'viem'
 import { formatUSDC, formatUSDCOrZero, shortenAddress } from '@/utils/format'
-import { useAgreementCount, useAgreement, usePendingWithdrawals, useWithdraw, useRefetchGroup } from '@/hooks/usePactFlow'
+import { useAgreementCount, usePendingWithdrawals, useWithdraw, useRefetchGroup } from '@/hooks/usePactFlow'
 import type { RefetchFn } from '@/hooks/usePactFlow'
 import { computeDashboardStats } from '@/utils/dashboardAggregation'
 import { agreementStatusBadge } from '@/components/ui/Badge'
 import { TxButton } from '@/components/ui/TxButton'
 import { TxReceipt } from '@/components/ui/TxReceipt'
-import { AgreementStatus, MilestoneStatus } from '@/contracts/pactflow'
+import { AgreementStatus, MilestoneStatus, PACTFLOW_ADDRESS, PACTFLOW_ABI, ARC_TESTNET_CHAIN_ID } from '@/contracts/pactflow'
 import type { AgreementData } from '@/types/pactflow'
 import { EscrowFlowVisual } from '@/components/visuals/ProtocolVisuals'
 
-type FilterKey = 'all' | 'active' | 'completed' | 'cancelled'
+import { collectAgreementReads, getAgreementRole, selectDashboardAgreements } from '@/utils/dashboardScope'
+import type { AgreementScope, AgreementFilter } from '@/utils/dashboardScope'
 
 const AS = {
   Active:    Number(AgreementStatus.Active),
@@ -159,37 +161,6 @@ function HowItWorks() {
   )
 }
 
-// ── AgreementLoader ───────────────────────────────────────────────────────────
-// Reports loaded data AND errors back to the Dashboard so stats can show a
-// proper error/retry state instead of an infinite skeleton when reads fail.
-function AgreementLoader({
-  agreementId,
-  onData,
-  onError,
-}: {
-  agreementId: bigint
-  onData: (id: bigint, data: AgreementData) => void
-  onError: (id: bigint) => void
-}) {
-  const { data, isError } = useAgreement(agreementId)
-  const ag = data as AgreementData | undefined
-
-  const cbRef = useRef({ onData, onError })
-  useLayoutEffect(() => { cbRef.current = { onData, onError } })
-
-  useEffect(() => {
-    if (ag && typeof ag.funder === 'string') {
-      cbRef.current.onData(agreementId, ag)
-    }
-  }, [agreementId, ag])
-
-  useEffect(() => {
-    if (isError) cbRef.current.onError(agreementId)
-  }, [agreementId, isError])
-
-  return null
-}
-
 // ── Stat chip ─────────────────────────────────────────────────────────────────
 function StatChip({ icon, label, value, sub, loading }: {
   icon: React.ReactNode
@@ -222,6 +193,7 @@ function FilterTab({ label, active, count, onClick }: {
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
       style={active
         ? { background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.32)', color: 'var(--accent-deep)' }
@@ -274,14 +246,10 @@ function terminalSummary(ag: AgreementData): string | null {
 }
 
 // ── Agreement card ────────────────────────────────────────────────────────────
-function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (id: bigint) => void }) {
-  const { data, isLoading } = useAgreement(agreementId)
+function AgreementCard({ agreementId, agreement: ag, onOpen }: {
+  agreementId: bigint; agreement: AgreementData; onOpen: (id: bigint) => void
+}) {
   const { address } = useAccount()
-
-  if (isLoading) return <div className="skeleton h-[118px] rounded-2xl" />
-
-  const ag = data as AgreementData | undefined
-  if (!ag || typeof ag.funder !== 'string') return <div className="skeleton h-[118px] rounded-2xl" />
 
   const { funder, builder, status, milestones, totalAmount, isFunded } = ag
   const agStatus      = Number(status)
@@ -294,12 +262,7 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
     Number(m.status) === MS.Submitted || Number(m.status) === MS.Approved).length
   const progress       = msArray.length > 0 ? releasedCount / msArray.length : 0
 
-  const myRole = address
-    ? ag.funder?.toLowerCase()     === address.toLowerCase() ? 'funder'
-    : ag.builder?.toLowerCase()    === address.toLowerCase() ? 'builder'
-    : ag.arbitrator?.toLowerCase() === address.toLowerCase() ? 'arbitrator'
-    : null
-    : null
+  const myRole = getAgreementRole(ag, address)
 
   const actionHint: string | null = (() => {
     if (!myRole || agStatus !== AS.Active) return null
@@ -409,12 +372,22 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
-export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps) {
+export function Dashboard(props: DashboardProps) {
+  const { address, isConnected } = useAccount()
+  // Reset scope, filters, and wallet-specific transaction presentation synchronously.
+  // Global on-chain reads remain cached by their contract query keys.
+  const walletKey = isConnected && address ? address.toLowerCase() : 'disconnected'
+  return <DashboardContent key={walletKey} {...props} />
+}
+
+function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps) {
   const { address, isConnected } = useAccount()
   const { data: agreementCountRaw, isLoading: countLoading, isError: countError, refetch: _refetchCount } = useAgreementCount()
   const { data: pendingWithdrawRaw, refetch: _refetchPending } = usePendingWithdrawals(address)
   const { withdraw, hash, isPending, isConfirming, isSuccess, error, reset: resetWithdraw } = useWithdraw()
-  const [filter, setFilter] = useState<FilterKey>('all')
+  const [filter, setFilter] = useState<AgreementFilter>('all')
+  const [scope, setScope] = useState<AgreementScope>(isConnected && address ? 'mine' : 'all')
+  const [retrying, setRetrying] = useState(false)
 
   const refetchCount   = _refetchCount   as RefetchFn
   const refetchPending = _refetchPending as RefetchFn
@@ -442,76 +415,38 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
 
   useEffect(() => { resetWithdraw() /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [address])
 
-  // Collected agreement data and error IDs (no hooks in loops)
-  const [loadedData, setLoadedData] = useState<Map<string, AgreementData>>(new Map())
-  const [errorIds, setErrorIds]     = useState<Set<string>>(new Set())
-
-  // countLoaded: true only after a successful count read confirms the real number.
-  // Prevents showing "No agreements" while the count RPC is still in-flight or errored.
-  const countLoaded     = !countLoading && !countError && agreementCountRaw !== undefined
+  const countLoaded = !countLoading && !countError && agreementCountRaw !== undefined
   const totalAgreements = countLoaded ? Number(agreementCountRaw) : 0
-
   const pendingWithdraw = typeof pendingWithdrawRaw === 'bigint' ? pendingWithdrawRaw : 0n
-  const withdrawLoaded  = pendingWithdrawRaw !== undefined
-
+  const withdrawLoaded = pendingWithdrawRaw !== undefined
   const ids = Array.from({ length: totalAgreements }, (_, i) => BigInt(i)).reverse()
-
-  const handleData = useCallback((id: bigint, data: AgreementData) => {
-    const key = id.toString()
-    setLoadedData(prev => {
-      const existing = prev.get(key)
-      if (existing === data) return prev
-      const next = new Map(prev)
-      next.set(key, data)
-      return next
-    })
-    // Clear any prior error for this id once data arrives (successful retry recovery)
-    setErrorIds(prev => {
-      if (!prev.has(key)) return prev
-      const next = new Set(prev)
-      next.delete(key)
-      return next
-    })
-  }, [])
-
-  const handleError = useCallback((id: bigint) => {
-    setErrorIds(prev => {
-      const key = id.toString()
-      if (prev.has(key)) return prev
-      const next = new Set(prev)
-      next.add(key)
-      return next
-    })
-  }, [])
-
-  // ── Aggregate stats via shared pure function ──────────────────────────────
-  // Pass -1 as totalAgreements while the count is not yet loaded — this keeps
-  // statsReady=false (skeleton shown) until the count RPC confirms the real number.
-  const { statsReady, statsError, totalLocked, totalReleased, activeCount } =
-    computeDashboardStats(loadedData, errorIds, countLoaded ? totalAgreements : -1)
-
-  // ── Filter ────────────────────────────────────────────────────────────────
-  const filteredIds = ids.filter(id => {
-    if (filter === 'all') return true
-    const ag = loadedData.get(id.toString())
-    if (!ag) return true
-    const s = Number(ag.status)
-    if (filter === 'active')    return s === AS.Active
-    if (filter === 'completed') return s === AS.Completed
-    if (filter === 'cancelled') return s === AS.Cancelled
-    return true
+  const registry = useReadContracts({
+    contracts: ids.map(id => ({
+      address: PACTFLOW_ADDRESS, abi: PACTFLOW_ABI as Abi,
+      functionName: 'getAgreement', args: [id], chainId: ARC_TESTNET_CHAIN_ID,
+    })),
+    allowFailure: true,
+    query: { enabled: countLoaded && totalAgreements > 0 },
   })
+  const { agreements, errors, complete } = collectAgreementReads(ids, registry.data)
+  const listError = countError || (countLoaded && totalAgreements > 0 && (registry.isError || errors.size > 0))
+  const listReady = countLoaded && complete && !listError && !retrying
+  const { totalLocked, totalReleased, activeCount } = computeDashboardStats(agreements, errors, totalAgreements)
+  const { counts, filtered } = selectDashboardAgreements(agreements, scope, isConnected ? address : undefined, filter)
 
-  const countByStatus = (target: number) =>
-    Array.from(loadedData.values()).filter(ag => Number(ag.status) === target).length
+  async function retryAgreements() {
+    setRetrying(true)
+    try {
+      // Refetch the failed records as well as the count. Refetching only the count
+      // leaves successful-but-partial multicall responses cached indefinitely.
+      await Promise.allSettled([refetchCount(), ...(totalAgreements > 0 ? [registry.refetch()] : [])])
+    } finally {
+      setRetrying(false)
+    }
+  }
 
   return (
     <div className="page-shell">
-      {/* Hidden loaders — stable hook count per component, never hooks-in-loops */}
-      {ids.map(id => (
-        <AgreementLoader key={id.toString()} agreementId={id} onData={handleData} onError={handleError} />
-      ))}
-
       <section className="mb-10 grid items-center gap-9 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
         <motion.div {...fadeUp} transition={{ duration: 0.32, ease }} className="py-2 lg:py-8">
           <span className="eyebrow">Milestone escrow · Arc Testnet</span>
@@ -582,7 +517,7 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
           transition={{ duration: 0.26, delay: 0.05, ease }}
           className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3"
         >
-          {statsError ? (
+          {listError ? (
             // One or more agreement reads failed — show "unavailable", not partial sums
             <div className="col-span-3 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
               style={{ background: 'var(--warning-bg)', borderColor: 'var(--warning-border)' }}>
@@ -593,35 +528,36 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
                 </span>
               </div>
               <button
-                onClick={() => void refetchCount()}
+                onClick={() => void retryAgreements()}
+                disabled={retrying}
                 className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold"
                 style={{ borderColor: 'var(--warning-border)', color: 'var(--warning)', background: 'transparent' }}
               >
-                Retry
+                {retrying ? 'Retrying…' : 'Retry'}
               </button>
             </div>
           ) : (
             <>
               <StatChip
                 icon={<Lock className="size-3" />}
-                label="Locked in Escrow"
-                value={`$${formatUSDCOrZero(statsReady ? totalLocked : undefined)}`}
+                label="Global · Locked in Escrow"
+                value={`$${formatUSDCOrZero(listReady ? totalLocked : undefined)}`}
                 sub="active funded agreements"
-                loading={!statsReady}
+                loading={!listReady}
               />
               <StatChip
                 icon={<CheckCircle2 className="size-3" />}
-                label="Released to Builders"
-                value={`$${formatUSDCOrZero(statsReady ? totalReleased : undefined)}`}
+                label="Global · Released to Builders"
+                value={`$${formatUSDCOrZero(listReady ? totalReleased : undefined)}`}
                 sub="across all agreements"
-                loading={!statsReady}
+                loading={!listReady}
               />
               <StatChip
                 icon={<Users className="size-3" />}
-                label="Active Agreements"
+                label="Global · Active Agreements"
                 value={String(activeCount)}
-                sub={`of ${totalAgreements} total`}
-                loading={!statsReady}
+                sub={`of ${totalAgreements} total · global`}
+                loading={!listReady}
               />
             </>
           )}
@@ -648,7 +584,7 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
                 </div>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--success)' }}>
-                    Claimable Balance
+                    Your Wallet · Claimable Balance
                   </p>
                   <p className="display text-xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
                     {formatUSDC(pendingWithdraw)}
@@ -714,59 +650,70 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
             <span className="eyebrow">On-chain registry</span>
             <h2 className="display mt-2 text-2xl font-semibold" style={{ color: 'var(--ink)' }}>Agreements</h2>
           </div>
-          {countLoaded && (
+          {listReady && (
             <span className="rounded-full border px-2.5 py-1 text-xs tabular-nums" style={{ borderColor: 'var(--border)', color: 'var(--subtle)' }}>
-              {totalAgreements} total
+              {counts.all} in scope
             </span>
           )}
         </div>
 
-        {countLoaded && totalAgreements > 0 && (
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            <FilterTab label="All"       active={filter === 'all'}       count={totalAgreements}             onClick={() => setFilter('all')} />
-            <FilterTab label="Active"    active={filter === 'active'}    count={countByStatus(AS.Active)}    onClick={() => setFilter('active')} />
-            <FilterTab label="Completed" active={filter === 'completed'} count={countByStatus(AS.Completed)} onClick={() => setFilter('completed')} />
-            <FilterTab label="Cancelled" active={filter === 'cancelled'} count={countByStatus(AS.Cancelled)} onClick={() => setFilter('cancelled')} />
-          </div>
-        )}
+        <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Agreement scope">
+          {isConnected && address && (
+            <FilterTab label="My agreements" active={scope === 'mine'} onClick={() => setScope('mine')} />
+          )}
+          <FilterTab label="All agreements" active={scope === 'all'} onClick={() => setScope('all')} />
+        </div>
+        <p className="mb-4 text-xs" style={{ color: 'var(--subtle)' }}>
+          {scope === 'mine' && address
+            ? `Agreements involving ${shortenAddress(address)} as funder, builder, or arbitrator.`
+            : 'All agreements in the on-chain registry.'}
+          {' '}Statistics above are global; claimable balance belongs to your wallet.
+        </p>
+        <div className="mb-4 flex flex-wrap gap-1.5" role="group" aria-label="Agreement status">
+          {(['all', 'active', 'completed', 'cancelled'] as const).map(status => (
+            <FilterTab key={status} label={status[0].toUpperCase() + status.slice(1)}
+              active={filter === status} count={listReady ? counts[status] : undefined}
+              onClick={() => setFilter(status)} />
+          ))}
+        </div>
 
-        {countLoading ? (
-          // Count RPC in-flight — show skeletons, not "no agreements"
-          <div className="space-y-2.5">
-            {[0, 1, 2].map(i => <div key={i} className="skeleton h-[118px] rounded-2xl" />)}
-          </div>
-        ) : countError ? (
-          // Count RPC failed — do not show "no agreements", show error + retry
+        {listError ? (
           <div className="panel-flat p-8 text-center" style={{ borderColor: 'var(--warning-border)' }}>
             <AlertTriangle className="mx-auto mb-2 size-6" style={{ color: 'var(--warning)' }} />
             <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               Could not load agreements
             </p>
             <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>
-              The agreement count could not be read from the network.
+              One or more network reads failed. The complete list and counts are unavailable.
             </p>
             <button
-              onClick={() => void refetchCount()}
+              onClick={() => void retryAgreements()}
+              disabled={retrying}
               className="mt-3 rounded-lg border px-4 py-2 text-xs font-semibold"
               style={{ borderColor: 'var(--accent)', color: 'var(--accent)', background: 'transparent' }}
             >
-              Retry
+              {retrying ? 'Retrying…' : 'Retry'}
             </button>
           </div>
-        ) : countLoaded && totalAgreements === 0 ? (
+        ) : !listReady ? (
+          <div className="space-y-2.5" role="status" aria-label="Loading agreements">
+            <span className="sr-only">Loading the complete agreement registry…</span>
+            {[0, 1, 2].map(i => <div key={i} className="skeleton h-[118px] rounded-2xl" />)}
+          </div>
+        ) : counts.all === 0 ? (
           // Count confirmed zero — safe to show empty state
           <div className="panel-flat p-10 text-center sm:p-14">
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl" style={{ background: 'var(--accent-glow)' }}>
               <Layers className="size-6" style={{ color: 'var(--accent)' }} />
             </div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>No agreements yet</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>{scope === 'mine' ? 'No agreements for this wallet' : 'No agreements yet'}</p>
             <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>
-              Create the first agreement to start tracking milestones on-chain.
+              {scope === 'mine' ? 'This wallet is not a funder, builder, or arbitrator in any agreement.' : 'Create the first agreement to start tracking milestones on-chain.'}
             </p>
           </div>
-        ) : filteredIds.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="panel-flat p-8 text-center">
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>No {filter} agreements.</p>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No {filter} agreements{scope === 'mine' ? ' for this wallet' : ''}.</p>
           </div>
         ) : (
           <motion.div
@@ -775,8 +722,8 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
             initial="initial"
             animate="animate"
           >
-            {filteredIds.map(id => (
-              <AgreementCard key={id.toString()} agreementId={id} onOpen={onOpenAgreement} />
+            {filtered.map(([id, agreement]) => (
+              <AgreementCard key={id} agreementId={BigInt(id)} agreement={agreement} onOpen={onOpenAgreement} />
             ))}
           </motion.div>
         )}

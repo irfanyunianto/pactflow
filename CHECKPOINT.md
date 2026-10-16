@@ -1,5 +1,75 @@
 # Work checkpoint — 2026-10-17
 
+## Current update — hero sequence and agreement scope
+
+Continued from `d591033`. This checkpoint includes the tested hero animation and
+My agreements / All agreements dashboard feature. No deployment, wallet signing,
+or transaction broadcast was performed.
+
+### Hero
+
+- One shared 16-second CSS cycle illustrates fund escrow → funds held → approve →
+  separate release → claimable balance. Moving violet markers follow the transfer
+  paths, with stage highlights, readable pauses, and soft transitions.
+- Preserved “Illustrative · not live”, charcoal/violet colors, logo geometry, and
+  application logic. No React animation timers, new dependencies, flashing, or glow
+  filters were introduced.
+- Reduced motion presents a static readable diagram without moving markers. The
+  mobile walkthrough uses the same five phases; approve and release are separate.
+- Chromium recordings and sampled computed styles confirmed real marker movement,
+  stage order, and the pause between approve, release, and claimable. Reduced-motion
+  desktop/mobile checks passed against the local production preview.
+
+### Dashboard scope
+
+- Connected wallets default to My agreements; disconnected visitors see All
+  agreements. Ownership matches the active address against funder, builder, or
+  arbitrator without case sensitivity.
+- Status filtering intersects with scope. Status-tab counts describe the selected
+  scope before the status filter. Summary metrics remain explicitly Global;
+  claimable balance is labeled Your Wallet.
+- Cards, counts, and empty states require a complete registry read. A failed count
+  or agreement read shows an error and Retry instead of a partial list. Retry
+  refetches records as well as the count, including failures within a multicall.
+- Wallet identity keys reset wallet-specific presentation synchronously on account
+  changes/disconnect: selected scope, status filter, old cards, balance, and receipt
+  presentation. Public contract-query data remains cached independently of wallets.
+- Dashboard cards and filters share a wagmi useReadContracts result. Removed the
+  separate hidden loaders and duplicate per-card reads. Transaction hooks, routing,
+  contracts, ABI, deployed addresses, RPC configuration, and role gates are unchanged.
+
+### Latest verification
+
+- `npm run lint`: pass, no warnings/errors.
+- `npm run typecheck`: pass.
+- `bun test`: **170 pass, 0 fail**, 7 files, including ownership/status/completeness
+  cases in `src/utils/__tests__/dashboardScope.test.ts`.
+- `/home/ubuntu/.foundry/bin/forge test`: **79 pass, 0 fail**, 17 suites.
+  The installed Forge binary was used because `npm run contracts:test` could not
+  find Forge on the shell PATH.
+- `npm run build`: pass, **1m 30s**. Existing dependency annotation notices and
+  bundle-size warnings remain unsuppressed.
+- Chromium with injected-wallet and ABI-encoded RPC fixtures passed: all three
+  roles, mixed-case matching, a new wallet without agreements, wallet switching,
+  disconnect, status/scope combinations and counts, loading without premature
+  empty states, and individual-record failure followed by successful Retry with
+  an unchanged agreement count. No browser page errors. No transactions were sent.
+- Latest source changes: `src/components/Dashboard.tsx`,
+  `src/components/visuals/ProtocolVisuals.tsx`, `src/index.css`,
+  `src/utils/dashboardScope.ts`, and `src/utils/__tests__/dashboardScope.test.ts`.
+- Local evidence is under `artifacts/hero-sequence/` and
+  `artifacts/dashboard-scope/`; the earlier diagnostic is under
+  `artifacts/motion-diagnosis/`. These recordings, screenshots, scripts, and logs
+  are review artifacts and are deliberately excluded from this commit, along with
+  secrets, node_modules, and build output.
+- Remaining signing/deployment/tooling limits from the baseline below still apply.
+
+## Previous baseline — d591033 (historical)
+
+The following records the prior identity/toolchain checkpoint; its test counts,
+process IDs, and timings are historical. Latest verification is listed above.
+
+
 Continued from `33e9df4` (clean worktree at start). The requested ivory identity
 was superseded by the user's dark charcoal + violet direction during this session.
 No deployment was performed. Completed changes are saved as a Git checkpoint
