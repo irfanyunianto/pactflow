@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { useAccount } from 'wagmi'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { DemoModeBanner } from '@/components/DemoModeBanner'
@@ -33,10 +33,7 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div className="flex min-h-[60vh] items-center justify-center px-4">
-          <div
-            className="mx-auto max-w-sm rounded-2xl border p-6 text-center"
-            style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-          >
+          <div className="panel mx-auto max-w-sm p-7 text-center">
             <AlertTriangle className="mx-auto mb-3 size-8 text-amber-400" />
             <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               Something went wrong
@@ -64,10 +61,7 @@ class ErrorBoundary extends Component<
 function NotFound({ path, onHome }: { path: string; onHome: () => void }) {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div
-        className="mx-auto max-w-sm rounded-2xl border p-6 text-center"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-      >
+      <div className="panel mx-auto max-w-sm p-7 text-center">
         <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
           Page not found
         </p>
@@ -111,13 +105,18 @@ export default function App() {
         : route.name
 
   return (
-    <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
-      <Header onLogoClick={goHome} />
-      <DemoModeBanner visible={showDemo} onDismiss={() => setDemoDismissed(true)} />
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
+        <Header
+          onLogoClick={goHome}
+          onCreate={() => pushRoute({ name: 'create' })}
+          activeView={route.name}
+        />
+        <DemoModeBanner visible={showDemo} onDismiss={() => setDemoDismissed(true)} />
 
-      <main className="pb-16 pt-2">
-        <ErrorBoundary key={boundaryKey} onReset={goHome}>
-          <AnimatePresence mode="wait">
+        <main>
+          <ErrorBoundary key={boundaryKey} onReset={goHome}>
+            <AnimatePresence mode="wait">
 
             {route.name === 'dashboard' && (
               <motion.div
@@ -176,9 +175,10 @@ export default function App() {
               </motion.div>
             )}
 
-          </AnimatePresence>
-        </ErrorBoundary>
-      </main>
-    </div>
+            </AnimatePresence>
+          </ErrorBoundary>
+        </main>
+      </div>
+    </MotionConfig>
   )
 }

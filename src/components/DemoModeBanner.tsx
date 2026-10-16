@@ -13,26 +13,30 @@ export function DemoModeBanner({ visible, onDismiss }: DemoModeBannerProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center gap-3 border-b px-4 py-2 sm:px-6"
+          className="border-b"
           style={{
-            background: 'rgba(26,95,168,0.12)',
-            borderColor: 'rgba(172,198,233,0.18)',
+            background: 'rgba(14,31,47,0.88)',
+            borderColor: 'var(--border)',
           }}
         >
-          <Info className="size-3.5 shrink-0" style={{ color: 'var(--accent)' }} />
-          <p className="flex-1 text-xs text-pretty" style={{ color: 'var(--muted)' }}>
-            <strong className="font-semibold" style={{ color: 'var(--ink-2)' }}>Demo Mode</strong>
-            {' '}— Browsing PactFlow without a wallet. On-chain data is live from Arc Testnet. Simulated balances are never shown.
-            Connect a wallet to create agreements and send transactions.
-          </p>
-          <button
-            onClick={onDismiss}
-            className="shrink-0 rounded-md p-1 transition-colors hover:bg-white/10"
-            style={{ color: 'var(--muted)' }}
-            aria-label="Dismiss"
-          >
-            <X className="size-3.5" />
-          </button>
+          <div className="mx-auto flex w-full max-w-[1180px] items-center gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full border"
+              style={{ background: 'var(--accent-glow)', borderColor: 'rgba(105,210,194,0.2)' }}>
+              <Info className="size-3" style={{ color: 'var(--accent)' }} />
+            </span>
+            <p className="flex-1 text-[11px] leading-relaxed text-pretty sm:text-xs" style={{ color: 'var(--muted)' }}>
+              <strong className="font-semibold" style={{ color: 'var(--ink-2)' }}>Read-only mode.</strong>
+              {' '}Live Arc Testnet data is visible without a wallet; no simulated balances are mixed in. Connect to create or transact.
+            </p>
+            <button
+              onClick={onDismiss}
+              className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
+              style={{ color: 'var(--subtle)' }}
+              aria-label="Dismiss read-only mode notice"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

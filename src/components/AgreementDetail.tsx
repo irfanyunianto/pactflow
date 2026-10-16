@@ -32,6 +32,7 @@ import { TxReceipt } from '@/components/ui/TxReceipt'
 import { formatUSDC, formatUSDCOrZero, shortenAddress, formatTimestamp } from '@/utils/format'
 import { AgreementStatus, MilestoneStatus, buildAddressUrl, PACTFLOW_ADDRESS } from '@/contracts/pactflow'
 import type { AgreementData, MilestoneData } from '@/types/pactflow'
+import { ResolutionDial } from '@/components/visuals/ProtocolVisuals'
 
 
 // SyncState drives the SyncingBanner.
@@ -52,9 +53,9 @@ const MS = {
 
 // ── Role pill ─────────────────────────────────────────────────────────────────
 const ROLE_COLORS = {
-  funder:     { bg: 'rgba(172,198,233,0.12)', border: 'rgba(172,198,233,0.35)', text: '#acc6e9' },
-  builder:    { bg: 'rgba(141,216,159,0.10)', border: 'rgba(141,216,159,0.30)', text: '#8dd89f' },
-  arbitrator: { bg: 'rgba(240,201,106,0.10)', border: 'rgba(240,201,106,0.30)', text: '#f0c96a' },
+  funder:     { bg: 'rgba(148,180,204,0.09)', border: 'rgba(148,180,204,0.25)', text: '#b3c6d5' },
+  builder:    { bg: 'rgba(105,210,194,0.08)', border: 'rgba(105,210,194,0.25)', text: '#69d2c2' },
+  arbitrator: { bg: 'rgba(217,186,114,0.08)', border: 'rgba(217,186,114,0.24)', text: '#d9ba72' },
   observer:   { bg: 'var(--surface)',          border: 'var(--border)',          text: 'var(--subtle)' },
 }
 
@@ -79,19 +80,19 @@ function TimelineDot({ status, isLast }: { status: MilestoneStatus | number; isL
     s === MS.Disputed  ? 'var(--warning)'  :
     s === MS.Refunded  ? 'var(--subtle)'   :
     s === MS.Approved  ? 'var(--accent)'   :
-    s === MS.Submitted ? '#6b8db5'         :
+    s === MS.Submitted ? '#6f91ad'         :
     'var(--border-strong)'
   return (
-    <div className="relative flex shrink-0 flex-col items-center" style={{ width: 24 }}>
+    <div className="relative flex shrink-0 flex-col items-center" style={{ width: 30 }}>
       <div
-        className="relative z-10 flex size-6 items-center justify-center rounded-full border-2"
-        style={{ background: 'var(--surface-muted)', borderColor: color }}
+        className="relative z-10 flex size-[30px] items-center justify-center rounded-full border"
+        style={{ background: '#0a1928', borderColor: color, boxShadow: `0 0 0 5px color-mix(in srgb, ${color} 8%, transparent)` }}
       >
         {(s === MS.Released || s === MS.Refunded) && <CheckCircle2 className="size-3" style={{ color }} />}
         {s === MS.Disputed && <AlertTriangle className="size-2.5" style={{ color }} />}
         {s !== MS.Released && s !== MS.Refunded && s !== MS.Disputed && <Circle className="size-2.5" style={{ color }} />}
       </div>
-      {!isLast && <div className="mt-0.5 w-px flex-1" style={{ background: 'var(--border)', minHeight: 20 }} />}
+      {!isLast && <div className="mt-1 w-px flex-1" style={{ background: 'linear-gradient(var(--border-strong), var(--border))', minHeight: 24 }} />}
     </div>
   )
 }
@@ -363,7 +364,7 @@ function MilestoneRow({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimExp.isSuccess, handleTxConfirmed])
 
-  if (isLoading) return <div className="skeleton h-16 rounded-xl" />
+  if (isLoading) return <div className="skeleton h-24 rounded-2xl" />
 
   const ms = milestoneRaw as MilestoneData | undefined
   if (!ms || typeof ms !== 'object' || !('description' in ms)) {
@@ -413,18 +414,18 @@ function MilestoneRow({
   const busy = localBusy || parentBusy
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-4">
       <TimelineDot status={status} isLast={isLast} />
 
-      <div className="flex-1 pb-3">
+      <div className="min-w-0 flex-1 pb-4">
         <button
           onClick={() => setExpanded(e => !e)}
-          className="flex w-full items-start justify-between gap-2 rounded-xl border px-4 py-3 text-left transition-colors hover:border-[var(--border-strong)]"
-          style={{ background: 'var(--surface-muted)', borderColor: 'var(--border)' }}
+          className="agreement-card flex w-full items-start justify-between gap-3 px-4 py-4 text-left sm:px-5"
+          style={{ borderColor: expanded ? 'var(--border-strong)' : 'var(--border)' }}
         >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+              <span className="text-[15px] font-semibold" style={{ color: 'var(--ink)' }}>
                 {description || `Milestone ${(milestoneIndex + 1n).toString()}`}
               </span>
               {milestoneStatusBadge(status)}
@@ -432,7 +433,7 @@ function MilestoneRow({
                 <Loader2 className="size-3 animate-spin" style={{ color: 'var(--accent)' }} />
               )}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--muted)' }}>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--muted)' }}>
               <span className="tabular-nums font-medium" style={{ color: 'var(--ink-2)' }}>{formatUSDC(amount)} USDC</span>
               {deadlineTs > 0 && (
                 <span className={isPast && Number(status) === MS.Pending ? 'text-amber-400' : ''}>
@@ -460,8 +461,8 @@ function MilestoneRow({
               transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="space-y-4 rounded-b-xl border border-t-0 px-4 pb-4 pt-3"
-                style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'var(--border)' }}>
+              <div className="space-y-4 rounded-b-2xl border border-t-0 px-4 pb-4 pt-4 sm:px-5 sm:pb-5"
+                style={{ background: 'rgba(7,18,29,0.72)', borderColor: 'var(--border)' }}>
 
                 {/* Syncing banner for this milestone */}
                 <SyncingBanner state={syncState} onRetry={() => { void handleRetry() }} />
@@ -1005,20 +1006,22 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
   // ── Loading / Error ────────────────────────────────────────────────────────
   if (isLoading) return (
-    <div className="mx-auto w-full max-w-[680px] px-4 py-10 sm:px-6">
+    <div className="page-shell">
       <div className="skeleton mb-5 h-5 w-28 rounded" />
-      <div className="skeleton mb-4 h-32 rounded-2xl" />
-      <div className="skeleton mb-3 h-20 rounded-xl" />
-      <div className="skeleton h-20 rounded-xl" />
+      <div className="skeleton mb-6 h-56 rounded-2xl" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="skeleton h-28 rounded-2xl" />
+        <div className="skeleton h-28 rounded-2xl" />
+      </div>
     </div>
   )
 
   if (isError || !rawAgreement || !ag || typeof ag.funder !== 'string') return (
-    <div className="mx-auto w-full max-w-[680px] px-4 py-10 sm:px-6">
+    <div className="page-shell">
       <button onClick={onBack} className="mb-6 flex items-center gap-1.5 text-sm transition-colors hover:text-[var(--ink)]" style={{ color: 'var(--muted)' }}>
         <ArrowLeft className="size-4" /> Dashboard
       </button>
-      <div className="rounded-2xl border p-8 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div className="panel mx-auto max-w-xl p-10 text-center">
         <AlertTriangle className="mx-auto mb-3 size-8" style={{ color: 'var(--warning)' }} />
         <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
           {isError ? 'Failed to load agreement' : `Agreement #${agreementId.toString()} not found`}
@@ -1062,12 +1065,12 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
   const showClaimable = address && pendingWithdraw !== undefined && pendingWithdraw > 0n
 
   return (
-    <div className="mx-auto w-full max-w-[680px] px-4 py-8 sm:px-6">
+    <div className="page-shell">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26 }}>
 
         <button
           onClick={onBack}
-          className="mb-6 flex items-center gap-1.5 text-sm transition-colors hover:text-[var(--ink)]"
+          className="mb-7 flex items-center gap-2 text-sm hover:text-[var(--ink)]"
           style={{ color: 'var(--muted)' }}
         >
           <ArrowLeft className="size-4" /> Dashboard
@@ -1082,11 +1085,11 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
         />
 
         {/* ── Header card ─────────────────────────────────────────── */}
-        <div className="mb-4 rounded-2xl border p-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="panel mb-6 p-5 sm:p-7">
+          <div className="relative z-10 flex flex-col items-start justify-between gap-6 lg:flex-row">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="display text-xl font-bold" style={{ color: 'var(--ink)', letterSpacing: '-0.025em' }}>
+                <h1 className="display text-2xl font-semibold sm:text-3xl" style={{ color: 'var(--ink)' }}>
                   Agreement #{agreementId.toString()}
                 </h1>
                 {agreementStatusBadge(agStatus)}
@@ -1098,7 +1101,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
                 )}
               </div>
 
-              <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
+              <div className="mt-4 grid gap-x-5 gap-y-2 text-xs sm:grid-cols-2">
                 {funder     && <AddrLink label="Funder"     addr={funder} />}
                 {builder    && <AddrLink label="Builder"    addr={builder} />}
                 {arbitrator && <AddrLink label="Arbitrator" addr={arbitrator} />}
@@ -1109,9 +1112,10 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
             </div>
 
             {/* Three-figure summary: value / escrow now / claimable */}
-            <div className="text-right">
-              <div>
-                <div className="display text-2xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
+            <div className="flex w-full items-center justify-between gap-4 border-t pt-5 text-right lg:w-auto lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0" style={{ borderColor: 'var(--border)' }}>
+              <ResolutionDial progress={progressPct} />
+              <div className="min-w-[140px]">
+                <div className="display text-2xl font-semibold tabular-nums" style={{ color: 'var(--ink)' }}>
                   {formatUSDC(escrowCost)}
                   <span className="ml-1 text-sm font-normal" style={{ color: 'var(--subtle)' }}>USDC</span>
                 </div>
@@ -1122,8 +1126,8 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
               {/* In Escrow now — only meaningful when funded and active */}
               {isFunded && isActive && (
-                <div className="mt-2.5 rounded-lg border px-2.5 py-1.5 text-right"
-                  style={{ background: 'rgba(172,198,233,0.06)', borderColor: 'rgba(172,198,233,0.18)' }}>
+                <div className="mt-3 rounded-xl border px-3 py-2 text-right"
+                  style={{ background: 'rgba(105,210,194,0.045)', borderColor: 'rgba(105,210,194,0.16)' }}>
                   <div className="text-xs font-semibold tabular-nums" style={{ color: 'var(--ink-2)' }}>
                     {escrowBalance !== undefined
                       ? `${formatUSDC(escrowBalance)} USDC`
@@ -1160,7 +1164,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
           </div>
 
           {count > 0 && (
-            <div className="mt-4">
+            <div className="relative z-10 mt-6 border-t pt-5" style={{ borderColor: 'var(--border)' }}>
               {/* Resolution progress bar.
                   Active funded agreements: show the bar only when funded.
                   Terminal agreements (Completed / Cancelled): always show
@@ -1291,7 +1295,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
         {/* ── Fund escrow ─────────────────────────────────────────── */}
         {role === 'funder' && !isFunded && isActive && (
-          <div className="mb-4 rounded-2xl border p-5" style={{ background: 'rgba(172,198,233,0.06)', borderColor: 'rgba(172,198,233,0.25)' }}>
+          <div className="panel-flat mb-6 p-5 sm:p-6" style={{ background: 'rgba(105,210,194,0.035)', borderColor: 'rgba(105,210,194,0.2)' }}>
             <h2 className="mb-1 text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>Fund Escrow</h2>
             <p className="mb-3 text-xs text-pretty" style={{ color: 'var(--muted)' }}>
               Deposit {formatUSDC(escrowCost)} USDC into the escrow contract to activate all milestones.
@@ -1319,10 +1323,10 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
         {/* ── Claimable balance ─────────────────────────────────────── */}
         {showClaimable && (
-          <div className="mb-4 rounded-2xl border p-4" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
+          <div className="panel-flat mb-6 p-5" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: 'rgba(141,216,159,0.15)' }}>
+                <div className="flex size-10 items-center justify-center rounded-xl" style={{ background: 'rgba(105,210,194,0.12)' }}>
                   <Wallet2 className="size-[18px]" style={{ color: 'var(--success)' }} />
                 </div>
                 <div>
@@ -1350,14 +1354,21 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
         )}
 
         {/* ── Milestones ───────────────────────────────────────────── */}
-        <div className="mb-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
-            Milestones ({count})
-          </h2>
+        <div className="panel mb-6 p-5 sm:p-7">
+          <div className="relative z-10 mb-6 flex items-end justify-between gap-3">
+            <div>
+              <span className="eyebrow">Delivery ledger</span>
+              <h2 className="display mt-2 text-2xl font-semibold" style={{ color: 'var(--ink)' }}>Milestones</h2>
+            </div>
+            <span className="rounded-full border px-2.5 py-1 text-xs tabular-nums"
+              style={{ borderColor: 'var(--border)', color: 'var(--subtle)' }}>
+              {count} total
+            </span>
+          </div>
           {count === 0 ? (
             <p className="text-xs" style={{ color: 'var(--muted)' }}>No milestones found.</p>
           ) : (
-            <div>
+            <div className="relative z-10">
               {Array.from({ length: count }, (_, i) => BigInt(i)).map((idx, i) => (
                 <MilestoneRow
                   key={`${agreementId.toString()}-${idx.toString()}`}
@@ -1378,9 +1389,9 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
         {/* ── Cancel ──────────────────────────────────────────────── */}
         {role === 'funder' && isActive && (
-          <div className="rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--subtle)' }}>
-              Cancel Agreement
+          <div className="panel-flat p-5 sm:p-6">
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--subtle)' }}>
+              Administrative control
             </h3>
             <p className="mb-3 text-xs text-pretty" style={{ color: 'var(--muted)' }}>
               Only allowed when no milestones are Submitted, Approved, or Disputed. Pending milestone funds return to your claimable balance.

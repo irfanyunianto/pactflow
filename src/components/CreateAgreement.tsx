@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, ArrowLeft, Info, AlertTriangle, Copy, Check } from 'lucide-react'
+import {
+  Plus, Trash2, ArrowLeft, Info, AlertTriangle, Copy, Check,
+  Users, ListChecks, ShieldCheck, CircleDollarSign,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { isAddress } from 'viem'
 import { useAccount } from 'wagmi'
@@ -16,25 +19,35 @@ function getMinDateStr(): string {
   d.setDate(d.getDate() + 1)
   return d.toISOString().split('T')[0]
 }
+
 const MODULE_MIN_DATE = getMinDateStr()
 
-interface MilestoneInput { description: string; amount: string; deadline: string }
-interface CreateAgreementProps { onBack: () => void; onCreated: (id: bigint) => void }
+interface MilestoneInput {
+  description: string
+  amount: string
+  deadline: string
+}
 
-// ── Field wrapper ─────────────────────────────────────────────────────────────
+interface CreateAgreementProps {
+  onBack: () => void
+  onCreated: (id: bigint) => void
+}
+
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <label className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>{label}</label>
+      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--silver)' }}>
+        {label}
+      </label>
       {children}
-      {hint && <p className="mt-1 text-[11px]" style={{ color: 'var(--subtle)' }}>{hint}</p>}
+      {hint ? <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: 'var(--subtle)' }}>{hint}</p> : null}
     </div>
   )
 }
 
-// ── Read-only funder address with truncation + copy ───────────────────────────
 function FunderDisplay({ address }: { address: string | undefined }) {
   const [copied, setCopied] = useState(false)
+
   function handleCopy() {
     if (!address) return
     void navigator.clipboard.writeText(address).then(() => {
@@ -42,27 +55,27 @@ function FunderDisplay({ address }: { address: string | undefined }) {
       setTimeout(() => setCopied(false), 1800)
     })
   }
+
   if (!address) {
     return (
-      <div className="mono rounded-xl border px-3 py-2.5 text-sm"
-        style={{ background: 'var(--surface-muted)', borderColor: 'var(--border)', color: 'var(--subtle)' }}>
+      <div className="mono rounded-xl border px-3.5 py-3 text-sm"
+        style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border)', color: 'var(--subtle)' }}>
         Connect wallet
       </div>
     )
   }
-  // Truncate: show first 6 + last 4 chars
-  const short = `${address.slice(0, 6)}…${address.slice(-4)}`
+
+  const short = `${address.slice(0, 8)}…${address.slice(-6)}`
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5"
-      style={{ background: 'var(--surface-muted)', borderColor: 'var(--border)' }}>
-      <span className="mono min-w-0 flex-1 truncate text-sm" style={{ color: 'var(--muted)' }}
-        title={address}>
+    <div className="flex min-w-0 items-center gap-2 rounded-xl border px-3.5 py-3"
+      style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border)' }}>
+      <span className="mono min-w-0 flex-1 truncate text-sm" style={{ color: 'var(--muted)' }} title={address}>
         {short}
       </span>
       <button
         type="button"
         onClick={handleCopy}
-        className="shrink-0 rounded-md p-1 transition-colors hover:bg-white/10"
+        className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
         style={{ color: copied ? 'var(--success)' : 'var(--subtle)' }}
         aria-label="Copy funder address"
         title={address}
@@ -73,29 +86,35 @@ function FunderDisplay({ address }: { address: string | undefined }) {
   )
 }
 
-// ── Address input with validation indicator ───────────────────────────────────
-function AddressInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function AddressInput({ value, onChange, placeholder, label }: {
+  value: string
+  onChange: (v: string) => void
+  placeholder: string
+  label: string
+}) {
   const valid = value.length > 0 && isAddress(value)
   const invalid = value.length > 0 && !isAddress(value)
+
   return (
     <div className="relative min-w-0">
       <input
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mono w-full rounded-xl border bg-transparent py-2.5 pl-3 pr-10 text-sm transition-colors placeholder:text-[var(--subtle)]"
+        aria-label={label}
+        className="mono w-full rounded-xl border bg-transparent py-3 pl-3.5 pr-11 text-sm placeholder:text-[var(--subtle)]"
         style={{
           borderColor: invalid ? 'var(--danger)' : valid ? 'var(--success)' : 'var(--border)',
           color: 'var(--ink)',
         }}
         spellCheck={false}
       />
-      {(valid || invalid) && (
+      {valid || invalid ? (
         <span
-          className="absolute right-3 top-1/2 size-2 -translate-y-1/2 rounded-full"
+          className="absolute right-4 top-1/2 size-2 -translate-y-1/2 rounded-full"
           style={{ background: valid ? 'var(--success)' : 'var(--danger)' }}
         />
-      )}
+      ) : null}
     </div>
   )
 }
@@ -103,9 +122,11 @@ function AddressInput({ value, onChange, placeholder }: { value: string; onChang
 export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
   const { address } = useAccount()
   const { data: agreementCountBefore } = useAgreementCount()
-  const [builder, setBuilder]   = useState('')
+  const [builder, setBuilder] = useState('')
   const [arbitrator, setArbitrator] = useState('')
-  const [milestones, setMilestones] = useState<MilestoneInput[]>([{ description: '', amount: '', deadline: '' }])
+  const [milestones, setMilestones] = useState<MilestoneInput[]>([
+    { description: '', amount: '', deadline: '' },
+  ])
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const { create, hash, isPending, isConfirming, isSuccess, error } = useCreateAgreement()
@@ -120,26 +141,43 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
   }, [isSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function addMilestone() {
-    if (milestones.length >= 20) { toast.error('Maximum 20 milestones per agreement'); return }
-    setMilestones(m => [...m, { description: '', amount: '', deadline: '' }])
+    if (milestones.length >= 20) {
+      toast.error('Maximum 20 milestones per agreement')
+      return
+    }
+    setMilestones(current => [...current, { description: '', amount: '', deadline: '' }])
   }
-  function removeMilestone(i: number) { setMilestones(m => m.filter((_, idx) => idx !== i)) }
-  function updateMilestone(i: number, key: keyof MilestoneInput, value: string) {
-    setMilestones(m => m.map((item, idx) => idx === i ? { ...item, [key]: value } : item))
+
+  function removeMilestone(index: number) {
+    setMilestones(current => current.filter((_, itemIndex) => itemIndex !== index))
   }
-  function totalAmount(): bigint { return milestones.reduce((s, m) => s + parseUSDC(m.amount), 0n) }
+
+  function updateMilestone(index: number, key: keyof MilestoneInput, value: string) {
+    setMilestones(current => current.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [key]: value } : item
+    )))
+  }
+
+  function totalAmount(): bigint {
+    return milestones.reduce((sum, milestone) => sum + parseUSDC(milestone.amount), 0n)
+  }
 
   function handleCreate() {
-    const err = validateAgreementForm(address, builder, arbitrator, milestones)
-    if (err) { setValidationError(err); toast.error(err); return }
+    const validationResult = validateAgreementForm(address, builder, arbitrator, milestones)
+    if (validationResult) {
+      setValidationError(validationResult)
+      toast.error(validationResult)
+      return
+    }
+
     setValidationError(null)
     create({
       builder: builder as `0x${string}`,
       arbitrator: arbitrator as `0x${string}`,
-      milestones: milestones.map(m => ({
-        description: m.description,
-        amount: parseUSDC(m.amount),
-        deadline: BigInt(Math.floor(new Date(m.deadline).getTime() / 1000)),
+      milestones: milestones.map(milestone => ({
+        description: milestone.description,
+        amount: parseUSDC(milestone.amount),
+        deadline: BigInt(Math.floor(new Date(milestone.deadline).getTime() / 1000)),
       })),
     })
   }
@@ -147,169 +185,238 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
   const total = totalAmount()
 
   return (
-    <div className="mx-auto w-full max-w-[680px] px-4 py-8 sm:px-6">
+    <div className="page-shell">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26 }}>
-
         <button
           onClick={onBack}
-          className="mb-6 flex items-center gap-1.5 text-sm transition-colors hover:text-[var(--ink)]"
+          className="mb-7 flex items-center gap-2 text-sm hover:text-[var(--ink)]"
           style={{ color: 'var(--muted)' }}
         >
-          <ArrowLeft className="size-4" /> Back to dashboard
+          <ArrowLeft className="size-4" /> Back to overview
         </button>
 
-        <h1 className="display mb-1 text-2xl font-bold" style={{ color: 'var(--ink)', letterSpacing: '-0.03em' }}>
-          Create Agreement
-        </h1>
-        <p className="mb-7 text-sm text-pretty" style={{ color: 'var(--muted)' }}>
-          Define roles, milestones, and amounts. You fund the escrow after creation.
-        </p>
+        <header className="mb-8 max-w-2xl">
+          <span className="eyebrow">New agreement</span>
+          <h1 className="display mt-3 text-3xl font-semibold sm:text-4xl" style={{ color: 'var(--ink)' }}>
+            Define the work before funds move.
+          </h1>
+          <p className="mt-3 max-w-[62ch] text-sm leading-6 text-pretty" style={{ color: 'var(--muted)' }}>
+            Assign the three roles, set clear delivery milestones, and review the complete escrow value before creating the agreement on-chain.
+          </p>
+        </header>
 
-        {/* ── Roles ───────────────────────────────────────────────── */}
-        <section className="mb-4 rounded-2xl border p-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
-            Participants
-          </h2>
-          <div className="space-y-4">
-            <Field label="Funder (you)">
-              <FunderDisplay address={address} />
-            </Field>
-            <Field label="Builder address" hint="The wallet that will submit evidence and receive released payments.">
-              <AddressInput value={builder} onChange={setBuilder} placeholder="0x…" />
-            </Field>
-            <Field label="Arbitrator address" hint="Neutral third party — can only act when a dispute is raised. Cannot access funds independently.">
-              <AddressInput value={arbitrator} onChange={setArbitrator} placeholder="0x…" />
-            </Field>
-          </div>
-        </section>
-
-        {/* ── Milestones ──────────────────────────────────────────── */}
-        <section className="mb-4 rounded-2xl border p-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
-              Milestones <span className="ml-1 tabular-nums" style={{ color: 'var(--muted)' }}>({milestones.length}/20)</span>
-            </h2>
-            <button
-              onClick={addMilestone}
-              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/5"
-              style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
-            >
-              <Plus className="size-3.5" /> Add
-            </button>
-          </div>
-
-          <AnimatePresence initial={false}>
-            {milestones.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
-                transition={{ duration: 0.22 }}
-                className={`rounded-xl border p-4 ${i < milestones.length - 1 ? 'mb-3' : ''}`}
-                style={{ background: 'var(--surface-muted)', borderColor: 'var(--border)' }}
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--silver)' }}>
-                    Milestone {i + 1}
-                  </span>
-                  {milestones.length > 1 && (
-                    <button
-                      onClick={() => removeMilestone(i)}
-                      className="rounded-lg p-1 transition-colors hover:bg-[var(--danger-bg)]"
-                      style={{ color: 'var(--subtle)' }}
-                      aria-label="Remove milestone"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  )}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
+          <div className="space-y-5">
+            <section className="panel p-5 sm:p-6">
+              <div className="relative z-10 mb-6 flex items-start gap-3">
+                <span className="metric-card__icon"><Users className="size-4" /></span>
+                <div>
+                  <h2 className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>Participants</h2>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>Each role must use a distinct wallet address.</p>
                 </div>
-                <div className="space-y-3">
+              </div>
+
+              <div className="relative z-10 grid gap-5 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Field label="Funder · You">
+                    <FunderDisplay address={address} />
+                  </Field>
+                </div>
+                <Field label="Builder" hint="Submits evidence and receives released payments.">
+                  <AddressInput value={builder} onChange={setBuilder} placeholder="0x builder wallet" label="Builder wallet address" />
+                </Field>
+                <Field label="Arbitrator" hint="Resolves a dispute only after one is raised.">
+                  <AddressInput value={arbitrator} onChange={setArbitrator} placeholder="0x arbitrator wallet" label="Arbitrator wallet address" />
+                </Field>
+              </div>
+            </section>
+
+            <section className="panel p-5 sm:p-6">
+              <div className="relative z-10 mb-6 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="metric-card__icon"><ListChecks className="size-4" /></span>
                   <div>
-                    <label className="mb-1 block text-xs" style={{ color: 'var(--muted)' }}>Description</label>
-                    <input
-                      value={m.description}
-                      onChange={e => updateMilestone(i, 'description', e.target.value)}
-                      placeholder="What should be delivered?"
-                      maxLength={256}
-                      className="w-full rounded-lg border bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-[var(--subtle)]"
-                      style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                    />
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>Milestone schedule</h2>
+                    <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>{milestones.length} of 20 milestones</p>
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs" style={{ color: 'var(--muted)' }}>Amount (USDC)</label>
-                      <div className="relative">
+                </div>
+                <button
+                  onClick={addMilestone}
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-white/[0.03]"
+                  style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}
+                >
+                  <Plus className="size-3.5" /> Add
+                </button>
+              </div>
+
+              <AnimatePresence initial={false}>
+                {milestones.map((milestone, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
+                    transition={{ duration: 0.22 }}
+                    className="relative z-10 mb-3 rounded-2xl border p-4 last:mb-0 sm:p-5"
+                    style={{ background: 'rgba(5,15,24,0.28)', borderColor: 'var(--border)' }}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex size-7 items-center justify-center rounded-full border font-mono text-[10px]"
+                          style={{ borderColor: 'var(--border-strong)', color: 'var(--accent)' }}>
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--silver)' }}>
+                          Milestone
+                        </span>
+                      </div>
+                      {milestones.length > 1 ? (
+                        <button
+                          onClick={() => removeMilestone(index)}
+                          className="rounded-lg p-1.5 hover:bg-[var(--danger-bg)]"
+                          style={{ color: 'var(--subtle)' }}
+                          aria-label={`Remove milestone ${index + 1}`}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-4">
+                      <Field label="Deliverable">
                         <input
-                          inputMode="decimal"
-                          value={m.amount}
-                          onChange={e => {
-                            const v = e.target.value.replace(/[^0-9.]/g, '')
-                            if (v === '' || /^\d*\.?\d*$/.test(v)) updateMilestone(i, 'amount', v)
-                          }}
-                          placeholder="0.00"
-                          className="w-full rounded-lg border bg-transparent py-2 pl-3 pr-12 text-sm tabular-nums transition-colors placeholder:text-[var(--subtle)]"
+                          value={milestone.description}
+                          onChange={event => updateMilestone(index, 'description', event.target.value)}
+                          placeholder="What should be delivered?"
+                          aria-label={`Milestone ${index + 1} deliverable`}
+                          maxLength={256}
+                          className="w-full rounded-xl border bg-transparent px-3.5 py-3 text-sm placeholder:text-[var(--subtle)]"
                           style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold"
-                          style={{ color: 'var(--subtle)' }}>USDC</span>
+                      </Field>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Escrow amount">
+                          <div className="relative">
+                            <input
+                              inputMode="decimal"
+                              value={milestone.amount}
+                              onChange={event => {
+                                const nextValue = event.target.value.replace(/[^0-9.]/g, '')
+                                if (nextValue === '' || /^\d*\.?\d*$/.test(nextValue)) {
+                                  updateMilestone(index, 'amount', nextValue)
+                                }
+                              }}
+                              placeholder="0.00"
+                              aria-label={`Milestone ${index + 1} escrow amount in USDC`}
+                              className="w-full rounded-xl border bg-transparent py-3 pl-3.5 pr-14 text-sm tabular-nums placeholder:text-[var(--subtle)]"
+                              style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                            />
+                            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold tracking-wider"
+                              style={{ color: 'var(--subtle)' }}>
+                              USDC
+                            </span>
+                          </div>
+                        </Field>
+
+                        <Field label="Deadline">
+                          <input
+                            type="date"
+                            value={milestone.deadline}
+                            min={MODULE_MIN_DATE}
+                            aria-label={`Milestone ${index + 1} deadline`}
+                            onChange={event => updateMilestone(index, 'deadline', event.target.value)}
+                            className="w-full rounded-xl border bg-transparent px-3.5 py-3 text-sm"
+                            style={{ borderColor: 'var(--border)', color: 'var(--ink)', colorScheme: 'dark' }}
+                          />
+                        </Field>
                       </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs" style={{ color: 'var(--muted)' }}>Deadline</label>
-                      <input
-                        type="date"
-                        value={m.deadline}
-                        min={MODULE_MIN_DATE}
-                        onChange={e => updateMilestone(i, 'deadline', e.target.value)}
-                        className="w-full rounded-lg border bg-transparent px-3 py-2 text-sm transition-colors"
-                        style={{ borderColor: 'var(--border)', color: 'var(--ink)', colorScheme: 'dark' }}
-                      />
-                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </section>
+
+            <div className="flex gap-3 rounded-2xl border px-4 py-4"
+              style={{ background: 'rgba(105,210,194,0.035)', borderColor: 'rgba(105,210,194,0.16)' }}>
+              <Info className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
+              <p className="text-xs leading-5 text-pretty" style={{ color: 'var(--muted)' }}>
+                <strong style={{ color: 'var(--ink-2)' }}>Evidence stays under human review.</strong>
+                {' '}A builder’s URL is recorded on-chain, but it never proves quality or releases funds automatically. The funder must approve and then release each milestone separately.
+              </p>
+            </div>
+          </div>
+
+          <aside className="lg:sticky lg:top-24">
+            <div className="panel p-5 sm:p-6">
+              <div className="relative z-10">
+                <span className="eyebrow">Agreement preview</span>
+                <div className="mt-5 rounded-2xl border p-4"
+                  style={{ background: 'rgba(5,15,24,0.32)', borderColor: 'var(--border)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--subtle)' }}>
+                    Total to escrow
+                  </p>
+                  <p className="display mt-2 text-3xl font-semibold tabular-nums" style={{ color: total > 0n ? 'var(--ink)' : 'var(--subtle)' }}>
+                    {formatUSDC(total)}
+                    <span className="ml-1.5 text-sm font-medium" style={{ color: 'var(--subtle)' }}>USDC</span>
+                  </p>
+                  <div className="mt-4 flex items-center justify-between border-t pt-3 text-xs" style={{ borderColor: 'var(--border)' }}>
+                    <span style={{ color: 'var(--subtle)' }}>Milestones</span>
+                    <span className="font-semibold tabular-nums" style={{ color: 'var(--ink-2)' }}>{milestones.length}</span>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
 
-          {/* Total */}
-          <div className="mt-4 flex items-center justify-between border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-            <span className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>Total to escrow</span>
-            <span className="display text-xl font-bold tabular-nums" style={{ color: total > 0n ? 'var(--ink)' : 'var(--subtle)' }}>
-              {formatUSDC(total)}
-              <span className="ml-1 text-sm font-normal" style={{ color: 'var(--subtle)' }}>USDC</span>
-            </span>
-          </div>
-        </section>
+                <div className="mt-6 space-y-5">
+                  <div className="flow-step">
+                    <span className="flow-step__index">01</span>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Create on-chain</p>
+                    <p className="mt-1 text-[11px] leading-relaxed" style={{ color: 'var(--subtle)' }}>Records roles, amounts, deadlines, and evidence rules.</p>
+                  </div>
+                  <div className="flow-step">
+                    <span className="flow-step__index">02</span>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Fund separately</p>
+                    <p className="mt-1 text-[11px] leading-relaxed" style={{ color: 'var(--subtle)' }}>USDC approval and escrow deposit happen after creation.</p>
+                  </div>
+                  <div className="flow-step">
+                    <span className="flow-step__index">03</span>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Release by milestone</p>
+                    <p className="mt-1 text-[11px] leading-relaxed" style={{ color: 'var(--subtle)' }}>Approval and release remain two distinct funder actions.</p>
+                  </div>
+                </div>
 
-        {/* ── Evidence notice ──────────────────────────────────────── */}
-        <div className="mb-6 flex gap-2.5 rounded-xl border px-3.5 py-3"
-          style={{ background: 'rgba(172,198,233,0.05)', borderColor: 'rgba(172,198,233,0.18)' }}>
-          <Info className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
-          <p className="text-xs text-pretty" style={{ color: 'var(--muted)' }}>
-            <strong style={{ color: 'var(--ink-2)' }}>Evidence policy:</strong> Builders submit evidence URLs per milestone. An evidence URL is an on-chain record only — it does not automatically release funds or prove quality. Only you (the funder) can approve and release each milestone.
-          </p>
+                <div className="mt-6 flex items-start gap-2.5 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--subtle)' }}>
+                    This creates a contract record. It does not transfer USDC until you fund it.
+                  </p>
+                </div>
+
+                <TxButton
+                  label="Create Agreement"
+                  onClick={handleCreate}
+                  isPending={isPending}
+                  isConfirming={isConfirming}
+                  className="mt-5 w-full py-3.5 text-sm"
+                />
+
+                {validationError && !isPending && !isConfirming && !isSuccess ? (
+                  <div className="mt-3 flex items-start gap-2 rounded-xl border px-3.5 py-3"
+                    style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger-border)' }}>
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" style={{ color: 'var(--danger)' }} />
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--danger)' }}>{validationError}</p>
+                  </div>
+                ) : null}
+
+                <TxReceipt hash={hash} isSuccess={isSuccess} error={error} successLabel="Agreement created — opening…" />
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2.5 px-1 text-[10px] leading-relaxed" style={{ color: 'var(--subtle)' }}>
+              <CircleDollarSign className="size-3.5 shrink-0" />
+              Amounts use Arc Testnet USDC with six-decimal precision.
+            </div>
+          </aside>
         </div>
-
-        <TxButton
-          label="Create Agreement"
-          onClick={handleCreate}
-          isPending={isPending}
-          isConfirming={isConfirming}
-          className="w-full py-3.5 text-base"
-        />
-
-        {/* Inline validation error — persists until corrected, unlike a toast */}
-        {validationError && !isPending && !isConfirming && !isSuccess && (
-          <div className="mt-3 flex items-start gap-2 rounded-xl border px-3.5 py-2.5"
-            style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger-border)' }}>
-            <AlertTriangle className="mt-0.5 size-3.5 shrink-0" style={{ color: 'var(--danger)' }} />
-            <p className="text-sm" style={{ color: 'var(--danger)' }}>{validationError}</p>
-          </div>
-        )}
-
-        <TxReceipt hash={hash} isSuccess={isSuccess} error={error} successLabel="Agreement created — opening…" />
-
       </motion.div>
     </div>
   )

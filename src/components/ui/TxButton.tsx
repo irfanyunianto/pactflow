@@ -30,12 +30,14 @@ export function TxButton({
   const { switchChain, isPending: isSwitching } = useSwitchChain()
   const wrongChain = isConnected && chainId !== ARC_TESTNET_CHAIN_ID
 
-  const base = 'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring-focus)]'
+  const base = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2'
 
   const styles: Record<string, React.CSSProperties> = {
     primary: {
       background: 'var(--accent)',
-      color: '#0d1b2f',
+      border: '1px solid rgba(198,255,246,0.2)',
+      color: 'var(--bg)',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), 0 8px 24px rgba(44,146,134,0.12)',
     },
     danger: {
       background: 'var(--danger-bg)',
@@ -43,14 +45,14 @@ export function TxButton({
       color: 'var(--danger)',
     },
     ghost: {
-      background: 'var(--surface)',
+      background: 'rgba(255,255,255,0.025)',
       border: '1px solid var(--border)',
       color: 'var(--ink-2)',
     },
   }
 
   const hoverStyles: Record<string, string> = {
-    primary: 'hover:brightness-110',
+    primary: 'hover:brightness-105 hover:-translate-y-px',
     danger:  'hover:brightness-110',
     ghost:   'hover:bg-white/10',
   }

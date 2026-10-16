@@ -3,16 +3,16 @@ import React from 'react'
 type Variant = 'pending' | 'submitted' | 'approved' | 'released' | 'disputed' | 'refunded' | 'active' | 'completed' | 'cancelled' | 'neutral'
 
 const variantStyles: Record<Variant, React.CSSProperties> = {
-  pending:   { background: 'rgba(168,187,212,0.10)', color: '#b8ccdf', border: '1px solid rgba(168,187,212,0.22)' },
-  submitted: { background: 'rgba(107,141,181,0.15)', color: '#b4cde8', border: '1px solid rgba(107,141,181,0.3)'  },
-  approved:  { background: 'rgba(172,198,233,0.15)', color: '#c2d8f0', border: '1px solid rgba(172,198,233,0.35)' },
-  released:  { background: 'rgba(141,216,159,0.12)', color: '#8dd89f', border: '1px solid rgba(141,216,159,0.28)' },
-  disputed:  { background: 'rgba(240,201,106,0.12)', color: '#f0c96a', border: '1px solid rgba(240,201,106,0.28)' },
-  refunded:  { background: 'rgba(168,187,212,0.08)', color: '#a8bbd4', border: '1px solid rgba(168,187,212,0.18)' },
-  active:    { background: 'rgba(172,198,233,0.13)', color: '#c2d8f0', border: '1px solid rgba(172,198,233,0.3)'  },
-  completed: { background: 'rgba(141,216,159,0.12)', color: '#8dd89f', border: '1px solid rgba(141,216,159,0.28)' },
-  cancelled: { background: 'rgba(168,187,212,0.08)', color: '#a8bbd4', border: '1px solid rgba(168,187,212,0.16)' },
-  neutral:   { background: 'rgba(168,187,212,0.07)', color: '#a8bbd4', border: '1px solid rgba(168,187,212,0.14)' },
+  pending:   { background: 'rgba(145,170,190,0.07)', color: '#9fb1c0', border: '1px solid rgba(145,170,190,0.18)' },
+  submitted: { background: 'rgba(89,132,166,0.10)', color: '#9cbcd2', border: '1px solid rgba(111,153,184,0.24)' },
+  approved:  { background: 'rgba(105,210,194,0.08)', color: '#8cddcf', border: '1px solid rgba(105,210,194,0.22)' },
+  released:  { background: 'rgba(105,210,194,0.09)', color: '#78d6b6', border: '1px solid rgba(105,210,194,0.24)' },
+  disputed:  { background: 'rgba(217,186,114,0.08)', color: '#d9ba72', border: '1px solid rgba(217,186,114,0.24)' },
+  refunded:  { background: 'rgba(145,170,190,0.06)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.16)' },
+  active:    { background: 'rgba(105,210,194,0.08)', color: '#8cddcf', border: '1px solid rgba(105,210,194,0.22)' },
+  completed: { background: 'rgba(105,210,194,0.09)', color: '#78d6b6', border: '1px solid rgba(105,210,194,0.24)' },
+  cancelled: { background: 'rgba(145,170,190,0.06)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.15)' },
+  neutral:   { background: 'rgba(145,170,190,0.05)', color: '#8fa3b3', border: '1px solid rgba(145,170,190,0.14)' },
 }
 
 interface BadgeProps {
@@ -25,7 +25,7 @@ export function Badge({ variant, children, className = '' }: BadgeProps) {
   return (
     <span
       style={variantStyles[variant]}
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.11em] ${className}`}
     >
       {children}
     </span>

@@ -24,7 +24,7 @@ export function TxReceipt({ hash, isSuccess, error, successLabel = 'Transaction 
           transition={{ duration: 0.18 }}
         >
           {isSuccess && hash ? (
-            <div className="mt-3 flex items-start gap-2.5 rounded-xl border p-3"
+            <div className="mt-3 flex items-start gap-2.5 rounded-xl border p-3.5"
               style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--success)' }} />
               <div className="min-w-0">
@@ -33,14 +33,14 @@ export function TxReceipt({ hash, isSuccess, error, successLabel = 'Transaction 
                   href={buildTxUrl(hash)}
                   target="_blank" rel="noreferrer"
                   className="mt-0.5 inline-flex items-center gap-1 text-xs hover:underline"
-                  style={{ color: 'rgba(141,216,159,0.7)' }}
+                  style={{ color: 'rgba(105,210,194,0.72)' }}
                 >
                   View on ArcScan <ExternalLink className="size-3" />
                 </a>
               </div>
             </div>
           ) : error ? (
-            <div className="mt-3 flex items-start gap-2.5 rounded-xl border p-3"
+            <div className="mt-3 flex items-start gap-2.5 rounded-xl border p-3.5"
               style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger-border)' }}>
               <XCircle className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--danger)' }} />
               <p className="text-sm" style={{ color: 'var(--danger)' }}>{parseOnchainError(error)}</p>

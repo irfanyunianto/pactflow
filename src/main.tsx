@@ -35,34 +35,36 @@ const StudioLogo = () => (
 // Studio watermark component - links back to Studio
 const StudioWatermark = () => (
   <a
+    className="studio-watermark"
+    aria-label="Built with Arc Studio"
     href="https://studio.arc.io/"
     target="_blank"
     rel="noopener noreferrer"
     style={{
       position: 'fixed',
-      bottom: '16px',
-      right: '16px',
+      bottom: '12px',
+      right: '12px',
       display: 'flex',
       alignItems: 'center',
-      gap: '6px',
-      padding: '8px 14px',
-      fontSize: '12px',
+      gap: '5px',
+      padding: '7px 11px',
+      fontSize: '10px',
       fontWeight: 600,
       fontFamily: 'system-ui, -apple-system, sans-serif',
-      color: '#1B3158',
+      color: '#91A7B8',
       textDecoration: 'none',
       cursor: 'pointer',
-      background: 'rgba(172, 198, 233, 0.85)',
-      backdropFilter: 'blur(12px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+      background: 'rgba(8, 21, 34, 0.88)',
+      backdropFilter: 'blur(14px) saturate(140%)',
+      WebkitBackdropFilter: 'blur(14px) saturate(140%)',
       borderRadius: '20px',
-      border: '1px solid rgba(255, 255, 255, 0.4)',
-      zIndex: 9999,
-      boxShadow: '0 4px 20px rgba(27, 49, 88, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+      border: '1px solid rgba(151, 179, 201, 0.16)',
+      zIndex: 30,
+      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.025)',
     }}
   >
     <StudioLogo />
-    Built with Arc Studio
+    <span>Built with Arc Studio</span>
   </a>
 )
 
@@ -70,7 +72,21 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>
+        <ConnectKitProvider
+          mode="dark"
+          customTheme={{
+            '--ck-font-family': "'DM Sans', sans-serif",
+            '--ck-primary-button-background': '#69d2c2',
+            '--ck-primary-button-color': '#07111d',
+            '--ck-primary-button-hover-background': '#84e5d6',
+            '--ck-secondary-button-background': '#10263a',
+            '--ck-secondary-button-color': '#e5edf2',
+            '--ck-body-background': '#0b1928',
+            '--ck-body-color': '#f1f5f7',
+            '--ck-border-radius': '14px',
+            '--ck-overlay-background': 'rgba(2,8,14,0.82)',
+          }}
+        >
           <App />
           <StudioWatermark />
           <Toaster position="top-center" />
@@ -79,4 +95,3 @@ createRoot(document.getElementById('root')!).render(
     </WagmiProvider>
   </StrictMode>,
 )
-

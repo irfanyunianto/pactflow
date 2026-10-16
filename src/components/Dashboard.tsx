@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ArrowRight, Wallet2, AlertTriangle, Layers, Lock,
   CheckCircle2, ChevronDown, ChevronUp, Users, Scale, Banknote,
+  ShieldCheck, FileCheck2,
 } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { formatUSDC, formatUSDCOrZero, shortenAddress } from '@/utils/format'
@@ -14,6 +15,7 @@ import { TxButton } from '@/components/ui/TxButton'
 import { TxReceipt } from '@/components/ui/TxReceipt'
 import { AgreementStatus, MilestoneStatus } from '@/contracts/pactflow'
 import type { AgreementData } from '@/types/pactflow'
+import { EscrowFlowVisual } from '@/components/visuals/ProtocolVisuals'
 
 type FilterKey = 'all' | 'active' | 'completed' | 'cancelled'
 
@@ -54,7 +56,7 @@ interface DashboardProps {
 // Dismissible, collapsed by default on small screens. Explains the three roles
 // and the separate Claim step without fabricating any numbers.
 function HowItWorks() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   const [dismissed, setDismissed] = useState(false)
 
   if (dismissed) return null
@@ -63,16 +65,18 @@ function HowItWorks() {
     <motion.div
       {...fadeUp}
       transition={{ duration: 0.26, ease }}
-      className="mb-5 overflow-hidden rounded-2xl border"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      className="panel-flat mb-6 overflow-hidden"
     >
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        className="flex w-full items-center justify-between px-5 py-4 text-left"
         aria-expanded={open}
       >
-        <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
-          How it works
+        <span>
+          <span className="eyebrow">Protocol path</span>
+          <span className="mt-1.5 block text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
+            One agreement, deliberate release controls
+          </span>
         </span>
         <span className="flex items-center gap-2" style={{ color: 'var(--subtle)' }}>
           {open
@@ -91,15 +95,15 @@ function HowItWorks() {
             transition={{ duration: 0.22, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="grid gap-3 border-t px-4 pb-4 pt-3 sm:grid-cols-3"
+            <div className="grid gap-3 border-t px-5 pb-5 pt-4 sm:grid-cols-3"
               style={{ borderColor: 'var(--border)' }}>
 
               {/* Funder */}
-              <div className="rounded-xl border p-3"
-                style={{ background: 'rgba(172,198,233,0.06)', borderColor: 'rgba(172,198,233,0.18)' }}>
+              <div className="rounded-2xl border p-4"
+                style={{ background: 'rgba(101,139,173,0.055)', borderColor: 'var(--border)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
-                  <Lock className="size-3.5" style={{ color: '#acc6e9' }} />
-                  <span className="text-xs font-semibold" style={{ color: '#acc6e9' }}>Funder</span>
+                  <Lock className="size-3.5" style={{ color: 'var(--silver)' }} />
+                  <span className="text-xs font-semibold" style={{ color: 'var(--silver)' }}>Funder</span>
                 </div>
                 <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
                   Creates the agreement, deposits USDC into escrow, and reviews submitted evidence. Approves milestones and authorises payment release.
@@ -107,11 +111,11 @@ function HowItWorks() {
               </div>
 
               {/* Builder */}
-              <div className="rounded-xl border p-3"
-                style={{ background: 'rgba(141,216,159,0.06)', borderColor: 'rgba(141,216,159,0.18)' }}>
+              <div className="rounded-2xl border p-4"
+                style={{ background: 'rgba(105,210,194,0.045)', borderColor: 'var(--border)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
-                  <Banknote className="size-3.5" style={{ color: '#8dd89f' }} />
-                  <span className="text-xs font-semibold" style={{ color: '#8dd89f' }}>Builder</span>
+                  <Banknote className="size-3.5" style={{ color: 'var(--accent)' }} />
+                  <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>Builder</span>
                 </div>
                 <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
                   Submits an evidence URL for each milestone. Once the funder approves and releases funds, the builder claims USDC to their wallet in a separate step.
@@ -119,11 +123,11 @@ function HowItWorks() {
               </div>
 
               {/* Arbitrator */}
-              <div className="rounded-xl border p-3"
-                style={{ background: 'rgba(240,201,106,0.06)', borderColor: 'rgba(240,201,106,0.18)' }}>
+              <div className="rounded-2xl border p-4"
+                style={{ background: 'rgba(217,186,114,0.04)', borderColor: 'var(--border)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
-                  <Scale className="size-3.5" style={{ color: '#f0c96a' }} />
-                  <span className="text-xs font-semibold" style={{ color: '#f0c96a' }}>Arbitrator</span>
+                  <Scale className="size-3.5" style={{ color: 'var(--warning)' }} />
+                  <span className="text-xs font-semibold" style={{ color: 'var(--warning)' }}>Arbitrator</span>
                 </div>
                 <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
                   A trusted third party who resolves disputes between funder and builder. All three roles must be different addresses.
@@ -131,8 +135,8 @@ function HowItWorks() {
               </div>
 
               {/* Claim note */}
-              <div className="rounded-xl border p-3 sm:col-span-3"
-                style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'var(--border)' }}>
+              <div className="rounded-2xl border p-4 sm:col-span-3"
+                style={{ background: 'rgba(255,255,255,0.018)', borderColor: 'var(--border)' }}>
                 <div className="mb-1.5 flex items-center gap-2">
                   <Wallet2 className="size-3.5" style={{ color: 'var(--accent)' }} />
                   <span className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Separate Claim Step</span>
@@ -199,18 +203,17 @@ function StatChip({ icon, label, value, sub, loading }: {
   loading?: boolean
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-xl border p-3"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-      <div className="flex items-center gap-1.5" style={{ color: 'var(--subtle)' }}>
-        {icon}
-        <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
+    <div className="metric-card flex flex-col justify-between gap-3">
+      <div className="flex items-center justify-between gap-2" style={{ color: 'var(--subtle)' }}>
+        <span className="text-[10px] font-bold uppercase tracking-[0.13em]">{label}</span>
+        <span className="metric-card__icon">{icon}</span>
       </div>
       {loading
-        ? <div className="skeleton h-5 w-16 rounded" />
-        : <span className="display text-lg font-bold tabular-nums leading-none" style={{ color: 'var(--ink)' }}>{value}</span>
+        ? <div className="skeleton h-7 w-24 rounded" />
+        : <span className="display text-2xl font-semibold tabular-nums leading-none" style={{ color: 'var(--ink)' }}>{value}</span>
       }
       {sub && !loading && (
-        <span className="text-[10px] leading-tight" style={{ color: 'var(--subtle)' }}>{sub}</span>
+        <span className="text-[11px] leading-tight" style={{ color: 'var(--subtle)' }}>{sub}</span>
       )}
     </div>
   )
@@ -223,9 +226,9 @@ function FilterTab({ label, active, count, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold"
+      className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
       style={active
-        ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#0d1b2f' }
+        ? { background: 'var(--accent-glow)', borderColor: 'rgba(105,210,194,0.34)', color: 'var(--accent)' }
         : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }
       }
     >
@@ -234,7 +237,7 @@ function FilterTab({ label, active, count, onClick }: {
         <span
           className="flex size-4 items-center justify-center rounded-full text-[10px] tabular-nums"
           style={active
-            ? { background: 'rgba(13,27,47,0.25)', color: '#0d1b2f' }
+            ? { background: 'rgba(105,210,194,0.14)', color: 'var(--accent)' }
             : { background: 'var(--surface-muted)', color: 'var(--subtle)' }
           }
         >
@@ -279,10 +282,10 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
   const { data, isLoading } = useAgreement(agreementId)
   const { address } = useAccount()
 
-  if (isLoading) return <div className="skeleton h-[88px] rounded-2xl" />
+  if (isLoading) return <div className="skeleton h-[118px] rounded-2xl" />
 
   const ag = data as AgreementData | undefined
-  if (!ag || typeof ag.funder !== 'string') return <div className="skeleton h-[88px] rounded-2xl" />
+  if (!ag || typeof ag.funder !== 'string') return <div className="skeleton h-[118px] rounded-2xl" />
 
   const { funder, builder, status, milestones, totalAmount, isFunded } = ag
   const agStatus      = Number(status)
@@ -318,16 +321,15 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
     <motion.button
       variants={stagger.item}
       onClick={() => onOpen(agreementId)}
-      className="group w-full rounded-2xl border p-4 text-left"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-      whileHover={{ borderColor: 'rgba(172,198,233,0.42)', backgroundColor: 'rgba(255,255,255,0.09)' }}
+      className="agreement-card group w-full p-5 text-left"
+      whileHover={{ borderColor: 'rgba(105,210,194,0.26)' }}
       whileTap={{ scale: 0.995 }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {/* Title row */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="display text-sm font-bold" style={{ color: 'var(--ink)' }}>
+            <span className="display text-base font-semibold" style={{ color: 'var(--ink)' }}>
               Agreement #{agreementId.toString()}
             </span>
             {agreementStatusBadge(agStatus)}
@@ -340,7 +342,7 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
           </div>
 
           {/* Address row */}
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             {funder && (
               <span className="text-xs" style={{ color: 'var(--subtle)' }}>
                 Funder <span className="mono" style={{ color: 'var(--muted)' }}>{shortenAddress(funder)}</span>
@@ -360,8 +362,8 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
 
           {/* Progress bar — only for active funded agreements */}
           {msArray.length > 0 && !isTerminal && isFunded && (
-            <div className="mt-2.5 flex items-center gap-2">
-              <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--border)' }}>
+            <div className="mt-4 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--border)' }}>
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -390,8 +392,8 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
         </div>
 
         {/* Right: value + funding state */}
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <div className="display text-base font-bold tabular-nums" style={{ color: 'var(--ink-2)' }}>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="display text-lg font-semibold tabular-nums" style={{ color: 'var(--ink-2)' }}>
             {formatUSDC(totalAmount ?? 0n)}
             <span className="ml-0.5 text-xs font-normal" style={{ color: 'var(--subtle)' }}> USDC</span>
           </div>
@@ -400,7 +402,10 @@ function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (
               Awaiting funding
             </span>
           )}
-          <ArrowRight className="size-4 opacity-40 group-hover:opacity-80" style={{ color: 'var(--accent)' }} />
+          <span className="flex size-8 items-center justify-center rounded-full border opacity-60 group-hover:opacity-100"
+            style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}>
+            <ArrowRight className="size-3.5" />
+          </span>
         </div>
       </div>
     </motion.button>
@@ -505,31 +510,71 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
     Array.from(loadedData.values()).filter(ag => Number(ag.status) === target).length
 
   return (
-    <div className="mx-auto w-full max-w-[1040px] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="page-shell">
       {/* Hidden loaders — stable hook count per component, never hooks-in-loops */}
       {ids.map(id => (
         <AgreementLoader key={id.toString()} agreementId={id} onData={handleData} onError={handleError} />
       ))}
 
-      {/* ── Hero — prose stays narrow, sits inside the wide container ── */}
-      <motion.div
-        {...fadeUp}
-        transition={{ duration: 0.28, ease }}
-        className="mb-6 max-w-[52ch]"
-      >
-        <h1 className="display text-3xl font-bold" style={{ color: 'var(--ink)', letterSpacing: '-0.035em' }}>
-          PactFlow
-        </h1>
-        <p className="mt-1 text-base font-medium text-balance" style={{ color: 'var(--ink-2)' }}>
-          Fund milestones. Review work. Release payments.
-        </p>
-        <p className="mt-1.5 text-sm text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
-          Milestone-based escrow for builders and grants — all on-chain on Arc Testnet.
-        </p>
-        <p className="mt-2 text-[11px]" style={{ color: 'var(--subtle)' }}>
-          Community prototype · Arc Testnet only · Future Rialo integration planned · Not affiliated with Rialo
-        </p>
-      </motion.div>
+      <section className="mb-7 grid items-center gap-7 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
+        <motion.div {...fadeUp} transition={{ duration: 0.32, ease }} className="py-2 lg:py-8">
+          <span className="eyebrow">Milestone escrow · Arc Testnet</span>
+          <h1 className="display mt-5 max-w-[12ch] text-[2.7rem] font-semibold leading-[0.98] text-balance sm:text-6xl"
+            style={{ color: 'var(--ink)' }}>
+            Work advances. Funds follow.
+          </h1>
+          <p className="mt-5 max-w-[56ch] text-[15px] leading-7 text-pretty sm:text-base" style={{ color: 'var(--muted)' }}>
+            Build agreements around verifiable milestones. Escrow USDC, review evidence, and release each payment only when the work is ready.
+          </p>
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              onClick={onCreateAgreement}
+              disabled={!isConnected}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
+            >
+              <Plus className="size-4" /> Create agreement
+            </button>
+            <button
+              onClick={() => document.getElementById('agreements')?.scrollIntoView()}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 text-sm font-semibold"
+              style={{ borderColor: 'var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--ink-2)' }}
+            >
+              View live agreements <ArrowRight className="size-4" />
+            </button>
+          </div>
+
+          <div className="mt-7 grid max-w-xl gap-3 border-t pt-5 sm:grid-cols-2" style={{ borderColor: 'var(--border)' }}>
+            <div className="flex items-start gap-2.5">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--subtle)' }}>
+                Role permissions and escrow rules are enforced by the deployed contract.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <FileCheck2 className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--accent)' }} />
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--subtle)' }}>
+                Evidence records never auto-approve or automatically release funds.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.42, delay: 0.05, ease }}
+        >
+          <EscrowFlowVisual />
+        </motion.div>
+      </section>
+
+      <div className="mb-7 flex flex-col gap-2 border-y py-3 text-[10px] font-semibold uppercase tracking-[0.12em] sm:flex-row sm:items-center sm:justify-between"
+        style={{ borderColor: 'var(--border)', color: 'var(--subtle)' }}>
+        <span>Community prototype · Arc Testnet only</span>
+        <span>Future Rialo integration planned · Not affiliated with or deployed on Rialo</span>
+      </div>
 
       {/* ── How It Works ─────────────────────────────────────────── */}
       <HowItWorks />
@@ -596,13 +641,13 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.22 }}
-            className="mb-5 rounded-2xl border p-4"
+            className="panel-flat mb-6 p-5"
             style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: 'rgba(141,216,159,0.15)' }}>
+                  style={{ background: 'rgba(105,210,194,0.12)' }}>
                   <Wallet2 className="size-5" style={{ color: 'var(--success)' }} />
                 </div>
                 <div>
@@ -637,22 +682,22 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
       <motion.div
         {...fadeUp}
         transition={{ duration: 0.24, delay: 0.1, ease }}
-        className="mb-6"
+        className="mb-8"
       >
         <button
           onClick={onCreateAgreement}
           disabled={!isConnected}
-          className="group flex w-full items-center gap-3.5 rounded-2xl border border-dashed p-4 hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ borderColor: isConnected ? 'rgba(172,198,233,0.3)' : 'var(--border)' }}
+          className="group flex w-full items-center gap-4 rounded-2xl border border-dashed p-4 text-left hover:bg-white/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
+          style={{ borderColor: isConnected ? 'rgba(105,210,194,0.26)' : 'var(--border)' }}
         >
           <div
-            className="flex size-10 shrink-0 items-center justify-center rounded-xl group-hover:scale-110"
-            style={{ background: 'var(--accent-glow)', transition: 'transform 0.18s ease' }}
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl border group-hover:scale-105"
+            style={{ background: 'var(--accent-glow)', borderColor: 'rgba(105,210,194,0.2)', transition: 'transform 0.18s ease' }}
           >
             <Plus className="size-5" style={{ color: 'var(--accent)' }} />
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>New agreement</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>Start a new escrow</p>
             <p className="text-xs" style={{ color: 'var(--muted)' }}>
               {isConnected
                 ? 'Define milestones, fund escrow, track delivery'
@@ -664,22 +709,24 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
 
       {/* ── Agreement list ───────────────────────────────────────── */}
       <motion.div
+        id="agreements"
         {...fadeUp}
         transition={{ duration: 0.24, delay: 0.14, ease }}
       >
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
-            Agreements
-          </span>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <span className="eyebrow">On-chain registry</span>
+            <h2 className="display mt-2 text-2xl font-semibold" style={{ color: 'var(--ink)' }}>Agreements</h2>
+          </div>
           {countLoaded && (
-            <span className="text-xs tabular-nums" style={{ color: 'var(--subtle)' }}>
+            <span className="rounded-full border px-2.5 py-1 text-xs tabular-nums" style={{ borderColor: 'var(--border)', color: 'var(--subtle)' }}>
               {totalAgreements} total
             </span>
           )}
         </div>
 
         {countLoaded && totalAgreements > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
+          <div className="mb-4 flex flex-wrap gap-1.5">
             <FilterTab label="All"       active={filter === 'all'}       count={totalAgreements}             onClick={() => setFilter('all')} />
             <FilterTab label="Active"    active={filter === 'active'}    count={countByStatus(AS.Active)}    onClick={() => setFilter('active')} />
             <FilterTab label="Completed" active={filter === 'completed'} count={countByStatus(AS.Completed)} onClick={() => setFilter('completed')} />
@@ -690,11 +737,11 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
         {countLoading ? (
           // Count RPC in-flight — show skeletons, not "no agreements"
           <div className="space-y-2.5">
-            {[0, 1, 2].map(i => <div key={i} className="skeleton h-[88px] rounded-2xl" />)}
+            {[0, 1, 2].map(i => <div key={i} className="skeleton h-[118px] rounded-2xl" />)}
           </div>
         ) : countError ? (
           // Count RPC failed — do not show "no agreements", show error + retry
-          <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--warning-border)' }}>
+          <div className="panel-flat p-8 text-center" style={{ borderColor: 'var(--warning-border)' }}>
             <AlertTriangle className="mx-auto mb-2 size-6" style={{ color: 'var(--warning)' }} />
             <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
               Could not load agreements
@@ -712,7 +759,7 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
           </div>
         ) : countLoaded && totalAgreements === 0 ? (
           // Count confirmed zero — safe to show empty state
-          <div className="rounded-2xl border p-10 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="panel-flat p-10 text-center sm:p-14">
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl" style={{ background: 'var(--accent-glow)' }}>
               <Layers className="size-6" style={{ color: 'var(--accent)' }} />
             </div>
@@ -722,12 +769,12 @@ export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps
             </p>
           </div>
         ) : filteredIds.length === 0 ? (
-          <div className="rounded-2xl border p-8 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="panel-flat p-8 text-center">
             <p className="text-sm" style={{ color: 'var(--muted)' }}>No {filter} agreements.</p>
           </div>
         ) : (
           <motion.div
-            className="space-y-2.5"
+            className="space-y-3"
             variants={stagger.container}
             initial="initial"
             animate="animate"
