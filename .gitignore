@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# Uploaded archives and diagnostic artifacts
+*.zip
+*.log
+*.jsonl
+*.trace
+*.trace.json
+
+# Foundry build artifacts
+contracts/out/
+contracts/cache/
+
+# Environment — never commit real credentials
+.env
+.env.local
+.env.*.local
+# Keep the example file tracked
+!.env.example
+
+# Circle entity secret and recovery files — never commit
+.circle/
+
+# Bun lockfile is safe to commit; leave it in
+# bun.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

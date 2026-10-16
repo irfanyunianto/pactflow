@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Arc Dark tokens (canonical) ─────────────────────────────────── */
+:root {
+  --bg:              #0d1b2f;
+  --bg-gradient:     linear-gradient(180deg, #0b1829 0%, #0d1b2f 55%, #122d45 100%);
+
+  /* surfaces */
+  --surface:         rgba(255,255,255,0.07);
+  --surface-strong:  rgba(255,255,255,0.11);
+  --surface-muted:   #1a2840;
+  --surface-hover:   rgba(255,255,255,0.10);
+
+  /* ink */
+  --ink:             #f9faf3;
+  --ink-2:           #e3ecf9;
+  --muted:           #d4e0ef;
+  --subtle:          #a8bbd4;
+
+  /* borders */
+  --border:          rgba(255,255,255,0.12);
+  --border-strong:   rgba(203,219,242,0.55);
+
+  /* brand */
+  --accent:          #acc6e9;
+  --accent-hover:    #cbdbf2;
+  --accent-deep:     #1a5fa8;
+  --accent-glow:     rgba(172,198,233,0.15);
+
+  /* semantic */
+  --success:         #8dd89f;
+  --success-bg:      rgba(141,216,159,0.09);
+  --success-border:  rgba(141,216,159,0.28);
+  --danger:          #e86d7a;
+  --danger-bg:       rgba(232,109,122,0.09);
+  --danger-border:   rgba(232,109,122,0.28);
+  --warning:         #f0c96a;
+  --warning-bg:      rgba(240,201,106,0.09);
+  --warning-border:  rgba(240,201,106,0.28);
+
+  /* decoration */
+  --silver:          #a8c0d6;
+  --ring-focus:      rgba(172,198,233,0.4);
+}
+
+/* ── Transitions ─────────────────────────────────────────────────── */
+:root {
+  --transition-std: 160ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-fast: 100ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-feature-settings: 'ss01', 'cv05';
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Typography helpers ──────────────────────────────────────────── */
+.display {
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', Menlo, monospace;
+  font-size: 0.875em;
+}
+
+/* ── Surface helpers ─────────────────────────────────────────────── */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border);
+}
+
+.glass-strong {
+  background: var(--surface-strong);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--border-strong);
+}
+
+/* ── Form inputs (global focus ring) ────────────────────────────── */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring-focus);
+  border-color: var(--accent) !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 2px;
+}
+
+/* ── Skeleton pulse (uses surface-muted as base) ─────────────────── */
+@keyframes pulse-dark {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.skeleton {
+  background: var(--surface-muted);
+  animation: pulse-dark 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Interactive elements — consistent transition ────────────────── */
+button, a, [role="button"] {
+  transition: opacity var(--transition-std), background var(--transition-std),
+              border-color var(--transition-std), color var(--transition-std),
+              transform var(--transition-fast), box-shadow var(--transition-std);
+}
+
+/* ── Milestone timeline connector ────────────────────────────────── */
+.timeline-connector {
+  position: absolute;
+  left: 11px;
+  top: 28px;
+  bottom: -12px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--border-strong), transparent);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

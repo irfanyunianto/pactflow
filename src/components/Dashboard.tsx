@@ -1,0 +1,743 @@
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Plus, ArrowRight, Wallet2, AlertTriangle, Layers, Lock,
+  CheckCircle2, ChevronDown, ChevronUp, Users, Scale, Banknote,
+} from 'lucide-react'
+import { useAccount } from 'wagmi'
+import { formatUSDC, formatUSDCOrZero, shortenAddress } from '@/utils/format'
+import { useAgreementCount, useAgreement, usePendingWithdrawals, useWithdraw, useRefetchGroup } from '@/hooks/usePactFlow'
+import type { RefetchFn } from '@/hooks/usePactFlow'
+import { computeDashboardStats } from '@/utils/dashboardAggregation'
+import { agreementStatusBadge } from '@/components/ui/Badge'
+import { TxButton } from '@/components/ui/TxButton'
+import { TxReceipt } from '@/components/ui/TxReceipt'
+import { AgreementStatus, MilestoneStatus } from '@/contracts/pactflow'
+import type { AgreementData } from '@/types/pactflow'
+
+type FilterKey = 'all' | 'active' | 'completed' | 'cancelled'
+
+const AS = {
+  Active:    Number(AgreementStatus.Active),
+  Completed: Number(AgreementStatus.Completed),
+  Cancelled: Number(AgreementStatus.Cancelled),
+} as const
+const MS = {
+  Released: Number(MilestoneStatus.Released),
+  Refunded: Number(MilestoneStatus.Refunded),
+  Disputed: Number(MilestoneStatus.Disputed),
+  Submitted: Number(MilestoneStatus.Submitted),
+  Approved:  Number(MilestoneStatus.Approved),
+  Pending:   Number(MilestoneStatus.Pending),
+} as const
+
+const fadeUp = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+}
+const ease = [0.25, 0.1, 0.25, 1] as const
+
+const stagger = {
+  container: { animate: { transition: { staggerChildren: 0.055 } } },
+  item: {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.24, ease } },
+  },
+}
+
+interface DashboardProps {
+  onCreateAgreement: () => void
+  onOpenAgreement: (id: bigint) => void
+}
+
+// ── How It Works ──────────────────────────────────────────────────────────────
+// Dismissible, collapsed by default on small screens. Explains the three roles
+// and the separate Claim step without fabricating any numbers.
+function HowItWorks() {
+  const [open, setOpen] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
+
+  if (dismissed) return null
+
+  return (
+    <motion.div
+      {...fadeUp}
+      transition={{ duration: 0.26, ease }}
+      className="mb-5 overflow-hidden rounded-2xl border"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+    >
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
+          How it works
+        </span>
+        <span className="flex items-center gap-2" style={{ color: 'var(--subtle)' }}>
+          {open
+            ? <ChevronUp  className="size-3.5" />
+            : <ChevronDown className="size-3.5" />}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="how"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="grid gap-3 border-t px-4 pb-4 pt-3 sm:grid-cols-3"
+              style={{ borderColor: 'var(--border)' }}>
+
+              {/* Funder */}
+              <div className="rounded-xl border p-3"
+                style={{ background: 'rgba(172,198,233,0.06)', borderColor: 'rgba(172,198,233,0.18)' }}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Lock className="size-3.5" style={{ color: '#acc6e9' }} />
+                  <span className="text-xs font-semibold" style={{ color: '#acc6e9' }}>Funder</span>
+                </div>
+                <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  Creates the agreement, deposits USDC into escrow, and reviews submitted evidence. Approves milestones and authorises payment release.
+                </p>
+              </div>
+
+              {/* Builder */}
+              <div className="rounded-xl border p-3"
+                style={{ background: 'rgba(141,216,159,0.06)', borderColor: 'rgba(141,216,159,0.18)' }}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Banknote className="size-3.5" style={{ color: '#8dd89f' }} />
+                  <span className="text-xs font-semibold" style={{ color: '#8dd89f' }}>Builder</span>
+                </div>
+                <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  Submits an evidence URL for each milestone. Once the funder approves and releases funds, the builder claims USDC to their wallet in a separate step.
+                </p>
+              </div>
+
+              {/* Arbitrator */}
+              <div className="rounded-xl border p-3"
+                style={{ background: 'rgba(240,201,106,0.06)', borderColor: 'rgba(240,201,106,0.18)' }}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Scale className="size-3.5" style={{ color: '#f0c96a' }} />
+                  <span className="text-xs font-semibold" style={{ color: '#f0c96a' }}>Arbitrator</span>
+                </div>
+                <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  A trusted third party who resolves disputes between funder and builder. All three roles must be different addresses.
+                </p>
+              </div>
+
+              {/* Claim note */}
+              <div className="rounded-xl border p-3 sm:col-span-3"
+                style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'var(--border)' }}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Wallet2 className="size-3.5" style={{ color: 'var(--accent)' }} />
+                  <span className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>Separate Claim Step</span>
+                </div>
+                <p className="text-xs text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
+                  Released or refunded USDC is held in a claimable balance inside the contract — it does not go to your wallet automatically. You must claim it. The claimable balance appears on your dashboard and on each agreement when you are the recipient.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t px-4 py-2" style={{ borderColor: 'var(--border)' }}>
+              <button
+                onClick={() => setDismissed(true)}
+                className="text-[11px] transition-colors hover:text-[var(--muted)]"
+                style={{ color: 'var(--subtle)' }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+// ── AgreementLoader ───────────────────────────────────────────────────────────
+// Reports loaded data AND errors back to the Dashboard so stats can show a
+// proper error/retry state instead of an infinite skeleton when reads fail.
+function AgreementLoader({
+  agreementId,
+  onData,
+  onError,
+}: {
+  agreementId: bigint
+  onData: (id: bigint, data: AgreementData) => void
+  onError: (id: bigint) => void
+}) {
+  const { data, isError } = useAgreement(agreementId)
+  const ag = data as AgreementData | undefined
+
+  const cbRef = useRef({ onData, onError })
+  useLayoutEffect(() => { cbRef.current = { onData, onError } })
+
+  useEffect(() => {
+    if (ag && typeof ag.funder === 'string') {
+      cbRef.current.onData(agreementId, ag)
+    }
+  }, [agreementId, ag])
+
+  useEffect(() => {
+    if (isError) cbRef.current.onError(agreementId)
+  }, [agreementId, isError])
+
+  return null
+}
+
+// ── Stat chip ─────────────────────────────────────────────────────────────────
+function StatChip({ icon, label, value, sub, loading }: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  sub?: string
+  loading?: boolean
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 rounded-xl border p-3"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div className="flex items-center gap-1.5" style={{ color: 'var(--subtle)' }}>
+        {icon}
+        <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
+      </div>
+      {loading
+        ? <div className="skeleton h-5 w-16 rounded" />
+        : <span className="display text-lg font-bold tabular-nums leading-none" style={{ color: 'var(--ink)' }}>{value}</span>
+      }
+      {sub && !loading && (
+        <span className="text-[10px] leading-tight" style={{ color: 'var(--subtle)' }}>{sub}</span>
+      )}
+    </div>
+  )
+}
+
+// ── Filter tab ────────────────────────────────────────────────────────────────
+function FilterTab({ label, active, count, onClick }: {
+  label: string; active: boolean; count?: number; onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold"
+      style={active
+        ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#0d1b2f' }
+        : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }
+      }
+    >
+      {label}
+      {count !== undefined && (
+        <span
+          className="flex size-4 items-center justify-center rounded-full text-[10px] tabular-nums"
+          style={active
+            ? { background: 'rgba(13,27,47,0.25)', color: '#0d1b2f' }
+            : { background: 'var(--surface-muted)', color: 'var(--subtle)' }
+          }
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ── Terminal-state summary for a card ─────────────────────────────────────────
+// Returns a short neutral factual line about a resolved agreement.
+function terminalSummary(ag: AgreementData): string | null {
+  const agStatus = Number(ag.status)
+  const msArray  = Array.isArray(ag.milestones) ? ag.milestones : []
+  if (agStatus === AS.Active) return null
+
+  const releasedCount  = msArray.filter(m => Number(m.status) === MS.Released).length
+  const refundedCount  = msArray.filter(m => Number(m.status) === MS.Refunded).length
+  const releasedAmount = msArray
+    .filter(m => Number(m.status) === MS.Released)
+    .reduce((s, m) => s + (m.amount ?? 0n), 0n)
+
+  if (agStatus === AS.Completed) {
+    if (releasedCount > 0)
+      return `${releasedCount} milestone${releasedCount > 1 ? 's' : ''} · ${formatUSDC(releasedAmount)} USDC paid`
+    return 'All milestones resolved'
+  }
+
+  if (agStatus === AS.Cancelled) {
+    if (!ag.isFunded) return 'Cancelled before funding — no funds at risk'
+    if (refundedCount > 0)
+      return `Cancelled · ${refundedCount} milestone${refundedCount > 1 ? 's' : ''} refunded`
+    return 'Cancelled after funding'
+  }
+
+  return null
+}
+
+// ── Agreement card ────────────────────────────────────────────────────────────
+function AgreementCard({ agreementId, onOpen }: { agreementId: bigint; onOpen: (id: bigint) => void }) {
+  const { data, isLoading } = useAgreement(agreementId)
+  const { address } = useAccount()
+
+  if (isLoading) return <div className="skeleton h-[88px] rounded-2xl" />
+
+  const ag = data as AgreementData | undefined
+  if (!ag || typeof ag.funder !== 'string') return <div className="skeleton h-[88px] rounded-2xl" />
+
+  const { funder, builder, status, milestones, totalAmount, isFunded } = ag
+  const agStatus      = Number(status)
+  const isTerminal    = agStatus !== AS.Active
+  const msArray       = Array.isArray(milestones) ? milestones : []
+
+  const releasedCount  = msArray.filter(m => Number(m.status) === MS.Released).length
+  const disputedCount  = msArray.filter(m => Number(m.status) === MS.Disputed).length
+  const submittedCount = msArray.filter(m =>
+    Number(m.status) === MS.Submitted || Number(m.status) === MS.Approved).length
+  const progress       = msArray.length > 0 ? releasedCount / msArray.length : 0
+
+  const myRole = address
+    ? ag.funder?.toLowerCase()     === address.toLowerCase() ? 'funder'
+    : ag.builder?.toLowerCase()    === address.toLowerCase() ? 'builder'
+    : ag.arbitrator?.toLowerCase() === address.toLowerCase() ? 'arbitrator'
+    : null
+    : null
+
+  const actionHint: string | null = (() => {
+    if (!myRole || agStatus !== AS.Active) return null
+    if (myRole === 'funder'     && !isFunded)          return 'Fund escrow to activate'
+    if (myRole === 'funder'     && submittedCount > 0)  return `${submittedCount} milestone${submittedCount > 1 ? 's' : ''} awaiting review`
+    if (myRole === 'builder'    && isFunded && msArray.some(m => Number(m.status) === MS.Pending))
+      return 'Submit evidence for pending milestones'
+    if (myRole === 'arbitrator' && disputedCount > 0)   return `${disputedCount} dispute${disputedCount > 1 ? 's' : ''} to resolve`
+    return null
+  })()
+
+  const summary = terminalSummary(ag)
+
+  return (
+    <motion.button
+      variants={stagger.item}
+      onClick={() => onOpen(agreementId)}
+      className="group w-full rounded-2xl border p-4 text-left"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      whileHover={{ borderColor: 'rgba(172,198,233,0.42)', backgroundColor: 'rgba(255,255,255,0.09)' }}
+      whileTap={{ scale: 0.995 }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {/* Title row */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="display text-sm font-bold" style={{ color: 'var(--ink)' }}>
+              Agreement #{agreementId.toString()}
+            </span>
+            {agreementStatusBadge(agStatus)}
+            {disputedCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+                style={{ borderColor: 'var(--warning-border)', color: 'var(--warning)', background: 'var(--warning-bg)' }}>
+                <AlertTriangle className="size-2.5" /> {disputedCount} disputed
+              </span>
+            )}
+          </div>
+
+          {/* Address row */}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+            {funder && (
+              <span className="text-xs" style={{ color: 'var(--subtle)' }}>
+                Funder <span className="mono" style={{ color: 'var(--muted)' }}>{shortenAddress(funder)}</span>
+              </span>
+            )}
+            {builder && (
+              <span className="text-xs" style={{ color: 'var(--subtle)' }}>
+                Builder <span className="mono" style={{ color: 'var(--muted)' }}>{shortenAddress(builder)}</span>
+              </span>
+            )}
+            {myRole && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+                You: {myRole}
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar — only for active funded agreements */}
+          {msArray.length > 0 && !isTerminal && isFunded && (
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--border)' }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.round(progress * 100)}%`,
+                    background: progress === 1 ? 'var(--success)' : 'var(--accent)',
+                  }}
+                />
+              </div>
+              <span className="shrink-0 text-[10px] tabular-nums" style={{ color: 'var(--subtle)' }}>
+                {releasedCount}/{msArray.length}
+              </span>
+            </div>
+          )}
+
+          {/* Action hint for active agreements, or terminal summary */}
+          {actionHint && (
+            <p className="mt-1.5 text-[11px] font-medium" style={{ color: 'var(--accent)' }}>
+              {actionHint}
+            </p>
+          )}
+          {!actionHint && summary && (
+            <p className="mt-1.5 text-[11px]" style={{ color: 'var(--subtle)' }}>
+              {summary}
+            </p>
+          )}
+        </div>
+
+        {/* Right: value + funding state */}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="display text-base font-bold tabular-nums" style={{ color: 'var(--ink-2)' }}>
+            {formatUSDC(totalAmount ?? 0n)}
+            <span className="ml-0.5 text-xs font-normal" style={{ color: 'var(--subtle)' }}> USDC</span>
+          </div>
+          {!isFunded && agStatus === AS.Active && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--warning)' }}>
+              Awaiting funding
+            </span>
+          )}
+          <ArrowRight className="size-4 opacity-40 group-hover:opacity-80" style={{ color: 'var(--accent)' }} />
+        </div>
+      </div>
+    </motion.button>
+  )
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+export function Dashboard({ onCreateAgreement, onOpenAgreement }: DashboardProps) {
+  const { address, isConnected } = useAccount()
+  const { data: agreementCountRaw, isLoading: countLoading, isError: countError, refetch: _refetchCount } = useAgreementCount()
+  const { data: pendingWithdrawRaw, refetch: _refetchPending } = usePendingWithdrawals(address)
+  const { withdraw, hash, isPending, isConfirming, isSuccess, error, reset: resetWithdraw } = useWithdraw()
+  const [filter, setFilter] = useState<FilterKey>('all')
+
+  const refetchCount   = _refetchCount   as RefetchFn
+  const refetchPending = _refetchPending as RefetchFn
+
+  const combinedRefetch = useCallback((): Promise<unknown> =>
+    Promise.allSettled([refetchPending(), refetchCount()]),
+  [refetchPending, refetchCount])
+  const { syncAll: syncDashboard } = useRefetchGroup([combinedRefetch], { maxAttempts: 4, intervalMs: 1500 })
+
+  const prevWithdraw = useRef(false)
+  useEffect(() => {
+    if (isSuccess && !prevWithdraw.current) {
+      prevWithdraw.current = true
+      void syncDashboard()
+    }
+    if (!isSuccess) prevWithdraw.current = false
+  }, [isSuccess, syncDashboard])
+
+  // Refresh count on mount — picks up agreements created while this was unmounted
+  useEffect(() => {
+    void refetchCount()
+  // Only on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => { resetWithdraw() /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [address])
+
+  // Collected agreement data and error IDs (no hooks in loops)
+  const [loadedData, setLoadedData] = useState<Map<string, AgreementData>>(new Map())
+  const [errorIds, setErrorIds]     = useState<Set<string>>(new Set())
+
+  // countLoaded: true only after a successful count read confirms the real number.
+  // Prevents showing "No agreements" while the count RPC is still in-flight or errored.
+  const countLoaded     = !countLoading && !countError && agreementCountRaw !== undefined
+  const totalAgreements = countLoaded ? Number(agreementCountRaw) : 0
+
+  const pendingWithdraw = typeof pendingWithdrawRaw === 'bigint' ? pendingWithdrawRaw : 0n
+  const withdrawLoaded  = pendingWithdrawRaw !== undefined
+
+  const ids = Array.from({ length: totalAgreements }, (_, i) => BigInt(i)).reverse()
+
+  const handleData = useCallback((id: bigint, data: AgreementData) => {
+    const key = id.toString()
+    setLoadedData(prev => {
+      const existing = prev.get(key)
+      if (existing === data) return prev
+      const next = new Map(prev)
+      next.set(key, data)
+      return next
+    })
+    // Clear any prior error for this id once data arrives (successful retry recovery)
+    setErrorIds(prev => {
+      if (!prev.has(key)) return prev
+      const next = new Set(prev)
+      next.delete(key)
+      return next
+    })
+  }, [])
+
+  const handleError = useCallback((id: bigint) => {
+    setErrorIds(prev => {
+      const key = id.toString()
+      if (prev.has(key)) return prev
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+  }, [])
+
+  // ── Aggregate stats via shared pure function ──────────────────────────────
+  // Pass -1 as totalAgreements while the count is not yet loaded — this keeps
+  // statsReady=false (skeleton shown) until the count RPC confirms the real number.
+  const { statsReady, statsError, totalLocked, totalReleased, activeCount } =
+    computeDashboardStats(loadedData, errorIds, countLoaded ? totalAgreements : -1)
+
+  // ── Filter ────────────────────────────────────────────────────────────────
+  const filteredIds = ids.filter(id => {
+    if (filter === 'all') return true
+    const ag = loadedData.get(id.toString())
+    if (!ag) return true
+    const s = Number(ag.status)
+    if (filter === 'active')    return s === AS.Active
+    if (filter === 'completed') return s === AS.Completed
+    if (filter === 'cancelled') return s === AS.Cancelled
+    return true
+  })
+
+  const countByStatus = (target: number) =>
+    Array.from(loadedData.values()).filter(ag => Number(ag.status) === target).length
+
+  return (
+    <div className="mx-auto w-full max-w-[1040px] px-4 py-8 sm:px-6 lg:px-8">
+      {/* Hidden loaders — stable hook count per component, never hooks-in-loops */}
+      {ids.map(id => (
+        <AgreementLoader key={id.toString()} agreementId={id} onData={handleData} onError={handleError} />
+      ))}
+
+      {/* ── Hero — prose stays narrow, sits inside the wide container ── */}
+      <motion.div
+        {...fadeUp}
+        transition={{ duration: 0.28, ease }}
+        className="mb-6 max-w-[52ch]"
+      >
+        <h1 className="display text-3xl font-bold" style={{ color: 'var(--ink)', letterSpacing: '-0.035em' }}>
+          PactFlow
+        </h1>
+        <p className="mt-1 text-base font-medium text-balance" style={{ color: 'var(--ink-2)' }}>
+          Fund milestones. Review work. Release payments.
+        </p>
+        <p className="mt-1.5 text-sm text-pretty leading-relaxed" style={{ color: 'var(--muted)' }}>
+          Milestone-based escrow for builders and grants — all on-chain on Arc Testnet.
+        </p>
+        <p className="mt-2 text-[11px]" style={{ color: 'var(--subtle)' }}>
+          Community prototype · Arc Testnet only · Future Rialo integration planned · Not affiliated with Rialo
+        </p>
+      </motion.div>
+
+      {/* ── How It Works ─────────────────────────────────────────── */}
+      <HowItWorks />
+
+      {/* ── Stats row ────────────────────────────────────────────── */}
+      {totalAgreements > 0 && (
+        <motion.div
+          {...fadeUp}
+          transition={{ duration: 0.26, delay: 0.05, ease }}
+          className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3"
+        >
+          {statsError ? (
+            // One or more agreement reads failed — show "unavailable", not partial sums
+            <div className="col-span-3 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+              style={{ background: 'var(--warning-bg)', borderColor: 'var(--warning-border)' }}>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="size-4 shrink-0" style={{ color: 'var(--warning)' }} />
+                <span className="text-xs font-medium" style={{ color: 'var(--ink-2)' }}>
+                  Totals unavailable — one or more agreement reads failed
+                </span>
+              </div>
+              <button
+                onClick={() => void refetchCount()}
+                className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold"
+                style={{ borderColor: 'var(--warning-border)', color: 'var(--warning)', background: 'transparent' }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              <StatChip
+                icon={<Lock className="size-3" />}
+                label="Locked in Escrow"
+                value={`$${formatUSDCOrZero(statsReady ? totalLocked : undefined)}`}
+                sub="active funded agreements"
+                loading={!statsReady}
+              />
+              <StatChip
+                icon={<CheckCircle2 className="size-3" />}
+                label="Released to Builders"
+                value={`$${formatUSDCOrZero(statsReady ? totalReleased : undefined)}`}
+                sub="across all agreements"
+                loading={!statsReady}
+              />
+              <StatChip
+                icon={<Users className="size-3" />}
+                label="Active Agreements"
+                value={String(activeCount)}
+                sub={`of ${totalAgreements} total`}
+                loading={!statsReady}
+              />
+            </>
+          )}
+        </motion.div>
+      )}
+
+      {/* ── Claimable balance ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {isConnected && withdrawLoaded && pendingWithdraw > 0n && (
+          <motion.div
+            key="claimable"
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.22 }}
+            className="mb-5 rounded-2xl border p-4"
+            style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: 'rgba(141,216,159,0.15)' }}>
+                  <Wallet2 className="size-5" style={{ color: 'var(--success)' }} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--success)' }}>
+                    Claimable Balance
+                  </p>
+                  <p className="display text-xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
+                    {formatUSDC(pendingWithdraw)}
+                    <span className="ml-1 text-sm font-normal" style={{ color: 'var(--muted)' }}>USDC</span>
+                  </p>
+                  <p className="mt-0.5 text-[11px]" style={{ color: 'var(--muted)' }}>
+                    Funds held in contract — not yet in your wallet
+                  </p>
+                </div>
+              </div>
+              <TxButton
+                label="Claim"
+                loadingLabel="Claiming…"
+                confirmingLabel="Confirming…"
+                onClick={withdraw}
+                isPending={isPending}
+                isConfirming={isConfirming}
+                className="shrink-0"
+              />
+            </div>
+            <TxReceipt hash={hash} isSuccess={isSuccess} error={error} successLabel="Funds claimed to your wallet" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Create CTA ───────────────────────────────────────────── */}
+      <motion.div
+        {...fadeUp}
+        transition={{ duration: 0.24, delay: 0.1, ease }}
+        className="mb-6"
+      >
+        <button
+          onClick={onCreateAgreement}
+          disabled={!isConnected}
+          className="group flex w-full items-center gap-3.5 rounded-2xl border border-dashed p-4 hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ borderColor: isConnected ? 'rgba(172,198,233,0.3)' : 'var(--border)' }}
+        >
+          <div
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl group-hover:scale-110"
+            style={{ background: 'var(--accent-glow)', transition: 'transform 0.18s ease' }}
+          >
+            <Plus className="size-5" style={{ color: 'var(--accent)' }} />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>New agreement</p>
+            <p className="text-xs" style={{ color: 'var(--muted)' }}>
+              {isConnected
+                ? 'Define milestones, fund escrow, track delivery'
+                : 'Connect wallet to create an agreement'}
+            </p>
+          </div>
+        </button>
+      </motion.div>
+
+      {/* ── Agreement list ───────────────────────────────────────── */}
+      <motion.div
+        {...fadeUp}
+        transition={{ duration: 0.24, delay: 0.14, ease }}
+      >
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--subtle)' }}>
+            Agreements
+          </span>
+          {countLoaded && (
+            <span className="text-xs tabular-nums" style={{ color: 'var(--subtle)' }}>
+              {totalAgreements} total
+            </span>
+          )}
+        </div>
+
+        {countLoaded && totalAgreements > 0 && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            <FilterTab label="All"       active={filter === 'all'}       count={totalAgreements}             onClick={() => setFilter('all')} />
+            <FilterTab label="Active"    active={filter === 'active'}    count={countByStatus(AS.Active)}    onClick={() => setFilter('active')} />
+            <FilterTab label="Completed" active={filter === 'completed'} count={countByStatus(AS.Completed)} onClick={() => setFilter('completed')} />
+            <FilterTab label="Cancelled" active={filter === 'cancelled'} count={countByStatus(AS.Cancelled)} onClick={() => setFilter('cancelled')} />
+          </div>
+        )}
+
+        {countLoading ? (
+          // Count RPC in-flight — show skeletons, not "no agreements"
+          <div className="space-y-2.5">
+            {[0, 1, 2].map(i => <div key={i} className="skeleton h-[88px] rounded-2xl" />)}
+          </div>
+        ) : countError ? (
+          // Count RPC failed — do not show "no agreements", show error + retry
+          <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--warning-border)' }}>
+            <AlertTriangle className="mx-auto mb-2 size-6" style={{ color: 'var(--warning)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>
+              Could not load agreements
+            </p>
+            <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>
+              The agreement count could not be read from the network.
+            </p>
+            <button
+              onClick={() => void refetchCount()}
+              className="mt-3 rounded-lg border px-4 py-2 text-xs font-semibold"
+              style={{ borderColor: 'var(--accent)', color: 'var(--accent)', background: 'transparent' }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : countLoaded && totalAgreements === 0 ? (
+          // Count confirmed zero — safe to show empty state
+          <div className="rounded-2xl border p-10 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl" style={{ background: 'var(--accent-glow)' }}>
+              <Layers className="size-6" style={{ color: 'var(--accent)' }} />
+            </div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-2)' }}>No agreements yet</p>
+            <p className="mt-1 text-xs" style={{ color: 'var(--subtle)' }}>
+              Create the first agreement to start tracking milestones on-chain.
+            </p>
+          </div>
+        ) : filteredIds.length === 0 ? (
+          <div className="rounded-2xl border p-8 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No {filter} agreements.</p>
+          </div>
+        ) : (
+          <motion.div
+            className="space-y-2.5"
+            variants={stagger.container}
+            initial="initial"
+            animate="animate"
+          >
+            {filteredIds.map(id => (
+              <AgreementCard key={id.toString()} agreementId={id} onOpen={onOpenAgreement} />
+            ))}
+          </motion.div>
+        )}
+      </motion.div>
+    </div>
+  )
+}

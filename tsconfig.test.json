@@ -1,0 +1,19 @@
+{
+  // Test-specific TypeScript config.
+  // Extends the app tsconfig but INCLUDES __tests__ directories and adds
+  // @types/bun so bun:test imports type-check correctly.
+  // Run:  tsc --project tsconfig.test.json --noEmit
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun-types"],
+    // Test files import from src/ via relative paths — no path alias issues.
+    // noEmit is inherited from the base config.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src/utils/__tests__/**/*.ts",
+    "src/utils/**/*.ts"
+  ],
+  "exclude": []
+}
