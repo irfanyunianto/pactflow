@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plus, Trash2, ArrowLeft, Info, AlertTriangle, Copy, Check,
+  Plus, Trash2, ArrowLeft, Info, AlertTriangle,
   Users, ListChecks, ShieldCheck, CircleDollarSign,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi'
 import { useCreateAgreement, useAgreementCount } from '@/hooks/usePactFlow'
 import { TxButton } from '@/components/ui/TxButton'
 import { TxReceipt } from '@/components/ui/TxReceipt'
+import { CopyAddressButton } from '@/components/ui/CopyAddressButton'
 import { formatUSDC } from '@/utils/format'
 import { parseUSDC } from '@/utils/parseUSDC'
 import { validateAgreementForm } from '@/utils/validateAgreement'
@@ -46,16 +47,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 function FunderDisplay({ address }: { address: string | undefined }) {
-  const [copied, setCopied] = useState(false)
-
-  function handleCopy() {
-    if (!address) return
-    void navigator.clipboard.writeText(address).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    })
-  }
-
   if (!address) {
     return (
       <div className="mono rounded-xl border px-3.5 py-3 text-sm"
@@ -72,16 +63,7 @@ function FunderDisplay({ address }: { address: string | undefined }) {
       <span className="mono min-w-0 flex-1 truncate text-sm" style={{ color: 'var(--muted)' }} title={address}>
         {short}
       </span>
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="shrink-0 rounded-md p-1.5 hover:bg-white/5"
-        style={{ color: copied ? 'var(--success)' : 'var(--subtle)' }}
-        aria-label="Copy funder address"
-        title={address}
-      >
-        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      </button>
+      <CopyAddressButton value={address} label="Copy funder address" />
     </div>
   )
 }
@@ -185,8 +167,8 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
   const total = totalAmount()
 
   return (
-    <div className="page-shell">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26 }}>
+    <div className="page-shell page-shell--reading">
+      <div>
         <button
           onClick={onBack}
           className="mb-7 flex items-center gap-2 text-sm hover:text-[var(--ink)]"
@@ -417,7 +399,7 @@ export function CreateAgreement({ onBack, onCreated }: CreateAgreementProps) {
             </div>
           </aside>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

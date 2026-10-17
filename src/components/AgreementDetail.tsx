@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft, ExternalLink, AlertTriangle, CheckCircle2,
-  Clock, Wallet2, Shield, ChevronDown, ChevronUp, Link2,
-  RefreshCw, CircleDot, Loader2, Copy, Check,
+  Clock, Wallet2, Shield, ChevronDown, Link2,
+  RefreshCw, CircleDot, Loader2,
 } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { toast } from 'sonner'
@@ -29,6 +29,7 @@ import type { MilestoneCheck } from '@/utils/milestonePostconditions'
 import { milestoneStatusBadge, agreementStatusBadge } from '@/components/ui/Badge'
 import { TxButton } from '@/components/ui/TxButton'
 import { TxReceipt } from '@/components/ui/TxReceipt'
+import { CopyAddressButton } from '@/components/ui/CopyAddressButton'
 import { formatUSDC, formatUSDCOrZero, shortenAddress, formatTimestamp } from '@/utils/format'
 import { AgreementStatus, MilestoneStatus, buildAddressUrl, PACTFLOW_ADDRESS } from '@/contracts/pactflow'
 import type { AgreementData, MilestoneData } from '@/types/pactflow'
@@ -205,6 +206,7 @@ function MilestoneRow({
   const { data: milestoneRaw, isLoading, refetch: _refetchMilestone } = useMilestone(agreementId, milestoneIndex)
   const refetchMilestone = _refetchMilestone as RefetchFn
   const [expanded, setExpanded]       = useState(false)
+  const reducedMotion = useReducedMotion()
   const [evidenceUrl, setEvidenceUrl] = useState('')
   const [syncState, setSyncState]     = useState<SyncState>('idle')
 
@@ -422,7 +424,9 @@ function MilestoneRow({
       <div className="min-w-0 flex-1 pb-4">
         <button
           onClick={() => setExpanded(e => !e)}
-          className="agreement-card flex w-full items-start justify-between gap-3 px-4 py-4 text-left sm:px-5"
+          aria-expanded={expanded}
+          aria-controls={`milestone-panel-${agreementId}-${milestoneIndex}`}
+          className="agreement-card milestone-toggle flex w-full items-start justify-between gap-3 px-4 py-4 text-left sm:px-5"
           style={{ borderColor: expanded ? 'var(--border-strong)' : 'var(--border)' }}
         >
           <div className="min-w-0 flex-1">
@@ -449,18 +453,17 @@ function MilestoneRow({
               )}
             </div>
           </div>
-          {expanded
-            ? <ChevronUp  className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--subtle)' }} />
-            : <ChevronDown className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--subtle)' }} />}
+          <ChevronDown className="disclosure-arrow mt-0.5 size-4 shrink-0" aria-hidden="true" style={{ color: 'var(--subtle)' }} />
         </button>
 
         <AnimatePresence>
           {expanded && (
             <motion.div
+              id={`milestone-panel-${agreementId}-${milestoneIndex}`}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              transition={{ duration: reducedMotion ? 0 : 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <div className="space-y-4 rounded-b-2xl border border-t-0 px-4 pb-4 pt-4 sm:px-5 sm:pb-5"
@@ -649,14 +652,6 @@ function MilestoneRow({
 
 // ── Address link with copy ────────────────────────────────────────────────────
 function AddrLink({ label, addr }: { label: string; addr: string }) {
-  const [copied, setCopied] = useState(false)
-  function handleCopy(e: React.MouseEvent) {
-    e.preventDefault()
-    void navigator.clipboard.writeText(addr).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    })
-  }
   return (
     <span className="flex items-center gap-1">
       <span className="text-[11px]" style={{ color: 'var(--subtle)' }}>{label}</span>
@@ -670,16 +665,7 @@ function AddrLink({ label, addr }: { label: string; addr: string }) {
         {shortenAddress(addr)}
         <ExternalLink className="size-2.5 opacity-40" />
       </a>
-      <button
-        onClick={handleCopy}
-        title="Copy address"
-        className="rounded p-0.5 opacity-40 transition-opacity hover:opacity-100"
-        style={{ color: 'var(--subtle)' }}
-      >
-        {copied
-          ? <Check  className="size-2.5" style={{ color: 'var(--success)' }} />
-          : <Copy   className="size-2.5" />}
-      </button>
+      <CopyAddressButton value={addr} label={`Copy ${label.toLowerCase()} address`} />
     </span>
   )
 }
@@ -1010,7 +996,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
 
   // ── Loading / Error ────────────────────────────────────────────────────────
   if (isLoading) return (
-    <div className="page-shell">
+    <div className="page-shell page-shell--reading">
       <div className="skeleton mb-5 h-5 w-28 rounded" />
       <div className="skeleton mb-6 h-56 rounded-2xl" />
       <div className="grid gap-4 lg:grid-cols-2">
@@ -1021,7 +1007,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
   )
 
   if (isError || !rawAgreement || !ag || typeof ag.funder !== 'string') return (
-    <div className="page-shell">
+    <div className="page-shell page-shell--reading">
       <button onClick={onBack} className="mb-6 flex items-center gap-1.5 text-sm transition-colors hover:text-[var(--ink)]" style={{ color: 'var(--muted)' }}>
         <ArrowLeft className="size-4" /> Dashboard
       </button>
@@ -1069,8 +1055,8 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
   const showClaimable = address && pendingWithdraw !== undefined && pendingWithdraw > 0n
 
   return (
-    <div className="page-shell">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26 }}>
+    <div className="page-shell page-shell--reading">
+      <div>
 
         <button
           onClick={onBack}
@@ -1197,7 +1183,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
                       }}
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPct}%` }}
-                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
                     />
                   </div>
                   {/* Secondary breakdown line for terminal agreements with any refunded */}
@@ -1405,7 +1391,7 @@ export function AgreementDetail({ agreementId, onBack }: AgreementDetailProps) {
           </div>
         )}
 
-      </motion.div>
+      </div>
     </div>
   )
 }

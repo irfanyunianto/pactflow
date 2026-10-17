@@ -30,7 +30,7 @@ export function TxButton({
   const { switchChain, isPending: isSwitching } = useSwitchChain()
   const wrongChain = isConnected && chainId !== ARC_TESTNET_CHAIN_ID
 
-  const base = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2'
+  const base = 'tx-button inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2'
 
   const styles: Record<string, React.CSSProperties> = {
     primary: {
@@ -51,17 +51,11 @@ export function TxButton({
     },
   }
 
-  const hoverStyles: Record<string, string> = {
-    primary: 'hover:brightness-105 hover:-translate-y-px',
-    danger:  'hover:brightness-110',
-    ghost:   'hover:bg-white/5',
-  }
-
   if (!isConnected) {
     return (
       <button
         disabled
-        className={`${base} ${hoverStyles[variant]} ${className}`}
+        className={`${base} ${className}`}
         style={styles[variant]}
       >
         Connect Wallet
@@ -90,7 +84,7 @@ export function TxButton({
     <button
       onClick={onClick}
       disabled={disabled || busy}
-      className={`${base} ${hoverStyles[variant]} ${className}`}
+      className={`${base} ${className}`}
       style={styles[variant]}
     >
       {isPending    ? <><Loader2 className="size-4 animate-spin" /> {loadingLabel}</>    :

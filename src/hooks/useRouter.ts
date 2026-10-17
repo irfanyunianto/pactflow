@@ -51,6 +51,11 @@ export function routeToPath(route: NavRoute): string {
   return '/'
 }
 
+function routeToPathForCurrentLocation(): string {
+  const current = parsePath(window.location.pathname)
+  return current.name === 'not-found' ? current.path : routeToPath(current)
+}
+
 export interface UseRouterResult {
   route: Route
   pushRoute: (r: NavRoute) => void
@@ -73,6 +78,8 @@ export function useRouter(): UseRouterResult {
 
   const pushRoute = useCallback((r: NavRoute) => {
     const path = routeToPath(r)
+    // A same-page click must preserve form state and browser history.
+    if (routeToPathForCurrentLocation() === path) return
     window.history.pushState(null, '', path)
     setRoute(r)
   }, [])

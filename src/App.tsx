@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { useAccount } from 'wagmi'
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion'
+import { MotionConfig } from 'framer-motion'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { DemoModeBanner } from '@/components/DemoModeBanner'
@@ -86,17 +86,14 @@ export default function App() {
   const { isConnected } = useAccount()
   const { route, pushRoute } = useRouter()
   const [demoDismissed, setDemoDismissed] = React.useState(false)
-  const [boundaryKey, setBoundaryKey] = React.useState(0)
 
   const showDemo = !isConnected && !demoDismissed
 
   function goHome() {
     pushRoute({ name: 'dashboard' })
-    setBoundaryKey(k => k + 1)
   }
 
-  // Animate key: use pathname so AnimatePresence can distinguish same-named
-  // routes that have different IDs (e.g. navigating from #3 to #4).
+  // Only a different route starts the content transition and resets route state.
   const routeKey =
     route.name === 'detail'
       ? `detail-${route.agreementId}`
@@ -106,7 +103,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
+      <div className="app-background min-h-dvh">
         <Header
           onLogoClick={goHome}
           onCreate={() => pushRoute({ name: 'create' })}
@@ -115,67 +112,32 @@ export default function App() {
         <DemoModeBanner visible={showDemo} onDismiss={() => setDemoDismissed(true)} />
 
         <main>
-          <ErrorBoundary key={boundaryKey} onReset={goHome}>
-            <AnimatePresence mode="wait">
-
-            {route.name === 'dashboard' && (
-              <motion.div
-                key={routeKey}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-              >
+          <ErrorBoundary onReset={goHome}>
+            {/* Immediate replacement: never hide the page or wait for an exit/RPC.
+                The shared shell stays mounted; only route content moves. */}
+            <div key={routeKey} className="route-content" data-route={routeKey}>
+              {route.name === 'dashboard' && (
                 <Dashboard
                   onCreateAgreement={() => pushRoute({ name: 'create' })}
                   onOpenAgreement={id => pushRoute({ name: 'detail', agreementId: id })}
                 />
-              </motion.div>
-            )}
-
-            {route.name === 'create' && (
-              <motion.div
-                key={routeKey}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
+              )}
+              {route.name === 'create' && (
                 <CreateAgreement
                   onBack={() => pushRoute({ name: 'dashboard' })}
                   onCreated={id => pushRoute({ name: 'detail', agreementId: id })}
                 />
-              </motion.div>
-            )}
-
-            {route.name === 'detail' && (
-              <motion.div
-                key={routeKey}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
+              )}
+              {route.name === 'detail' && (
                 <AgreementDetail
                   agreementId={route.agreementId}
                   onBack={() => pushRoute({ name: 'dashboard' })}
                 />
-              </motion.div>
-            )}
-
-            {route.name === 'not-found' && (
-              <motion.div
-                key={routeKey}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-              >
+              )}
+              {route.name === 'not-found' && (
                 <NotFound path={route.path} onHome={goHome} />
-              </motion.div>
-            )}
-
-            </AnimatePresence>
+              )}
+            </div>
           </ErrorBoundary>
         </main>
       </div>

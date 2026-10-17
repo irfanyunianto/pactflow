@@ -19,7 +19,7 @@ export function DemoModeBanner({ visible, onDismiss }: DemoModeBannerProps) {
             borderColor: 'var(--border)',
           }}
         >
-          <div className="mx-auto flex w-full max-w-[1180px] items-center gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
+          <div className="app-container flex items-center gap-3 py-2.5">
             <span className="flex size-6 shrink-0 items-center justify-center rounded-full border"
               style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)' }}>
               <Info className="size-3" style={{ color: 'var(--accent)' }} />

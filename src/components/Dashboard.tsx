@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Plus, ArrowRight, Wallet2, AlertTriangle, Layers, Lock,
-  CheckCircle2, ChevronDown, ChevronUp, Users, Scale, Banknote,
+  CheckCircle2, ChevronDown, Users, Scale, Banknote,
   ShieldCheck, FileCheck2,
 } from 'lucide-react'
 import { useAccount, useReadContracts } from 'wagmi'
@@ -36,7 +36,7 @@ const MS = {
 } as const
 
 const fadeUp = {
-  initial: { opacity: 0, y: 10 },
+  initial: false as const,
   animate: { opacity: 1, y: 0 },
 }
 const ease = [0.25, 0.1, 0.25, 1] as const
@@ -45,7 +45,7 @@ const stagger = {
   container: { animate: { transition: { staggerChildren: 0.055 } } },
   item: {
     initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.24, ease } },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.2, ease } },
   },
 }
 
@@ -60,13 +60,14 @@ interface DashboardProps {
 function HowItWorks() {
   const [open, setOpen] = useState(true)
   const [dismissed, setDismissed] = useState(false)
+  const reducedMotion = useReducedMotion()
 
   if (dismissed) return null
 
   return (
     <motion.div
       {...fadeUp}
-      transition={{ duration: 0.26, ease }}
+      transition={{ duration: 0.2, ease }}
       className="panel-flat mb-6 overflow-hidden"
     >
       <button
@@ -81,9 +82,7 @@ function HowItWorks() {
           </span>
         </span>
         <span className="flex items-center gap-2" style={{ color: 'var(--subtle)' }}>
-          {open
-            ? <ChevronUp  className="size-3.5" />
-            : <ChevronDown className="size-3.5" />}
+          <ChevronDown className="disclosure-arrow size-3.5" aria-hidden="true" />
         </span>
       </button>
 
@@ -94,7 +93,7 @@ function HowItWorks() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            transition={{ duration: reducedMotion ? 0 : 0.2, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
             <div className="grid gap-3 border-t px-5 pb-5 pt-4 sm:grid-cols-3"
@@ -194,7 +193,7 @@ function FilterTab({ label, active, count, onClick }: {
     <button
       onClick={onClick}
       aria-pressed={active}
-      className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
+      className="filter-tab flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
       style={active
         ? { background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.32)', color: 'var(--accent-deep)' }
         : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }
@@ -280,9 +279,7 @@ function AgreementCard({ agreementId, agreement: ag, onOpen }: {
     <motion.button
       variants={stagger.item}
       onClick={() => onOpen(agreementId)}
-      className="agreement-card group w-full p-5 text-left"
-      whileHover={{ borderColor: 'rgba(93,74,184,0.36)' }}
-      whileTap={{ scale: 0.995 }}
+      className="agreement-card agreement-link group w-full p-5 text-left"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -447,10 +444,10 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
 
   return (
     <div className="page-shell">
-      <section className="mb-10 grid items-center gap-9 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
-        <motion.div {...fadeUp} transition={{ duration: 0.32, ease }} className="py-2 lg:py-8">
+      <section className="dashboard-hero mb-10">
+        <motion.div {...fadeUp} transition={{ duration: 0.22, ease }} className="py-2 lg:py-8">
           <span className="eyebrow">Milestone escrow · Arc Testnet</span>
-          <h1 className="display mt-5 max-w-[11ch] text-[2.75rem] font-extrabold leading-[0.96] text-balance sm:text-6xl"
+          <h1 className="dashboard-hero__title display mt-5 font-extrabold leading-[1.06] text-balance"
             style={{ color: 'var(--ink)' }}>
             Fund the work. Review each release.
           </h1>
@@ -493,9 +490,9 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.98, y: 12 }}
+          initial={false}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.42, delay: 0.05, ease }}
+          transition={{ duration: 0.22, delay: 0.05, ease }}
         >
           <EscrowFlowVisual />
         </motion.div>
@@ -514,7 +511,7 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
       {totalAgreements > 0 && (
         <motion.div
           {...fadeUp}
-          transition={{ duration: 0.26, delay: 0.05, ease }}
+          transition={{ duration: 0.2, delay: 0.05, ease }}
           className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3"
         >
           {listError ? (
@@ -613,18 +610,18 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
       {/* ── Create CTA ───────────────────────────────────────────── */}
       <motion.div
         {...fadeUp}
-        transition={{ duration: 0.24, delay: 0.1, ease }}
+        transition={{ duration: 0.2, delay: 0.1, ease }}
         className="mb-8"
       >
         <button
           onClick={onCreateAgreement}
           disabled={!isConnected}
-          className="group flex w-full items-center gap-4 rounded-xl border border-dashed p-4 text-left hover:bg-white/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
+          className="group flex w-full items-center gap-4 rounded-xl border border-dashed p-4 text-left enabled:hover:bg-white/[0.025] disabled:cursor-not-allowed disabled:opacity-40 sm:p-5"
           style={{ borderColor: isConnected ? 'rgba(93,74,184,0.3)' : 'var(--border)', background: 'var(--surface)' }}
         >
           <div
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border group-hover:scale-105"
-            style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)', transition: 'transform 0.18s ease' }}
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl border"
+            style={{ background: 'var(--accent-glow)', borderColor: 'rgba(93,74,184,0.2)' }}
           >
             <Plus className="size-5" style={{ color: 'var(--accent)' }} />
           </div>
@@ -643,7 +640,7 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
       <motion.div
         id="agreements"
         {...fadeUp}
-        transition={{ duration: 0.24, delay: 0.14, ease }}
+        transition={{ duration: 0.2, delay: 0.14, ease }}
       >
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
@@ -717,9 +714,9 @@ function DashboardContent({ onCreateAgreement, onOpenAgreement }: DashboardProps
           </div>
         ) : (
           <motion.div
-            className="space-y-3"
+            className="agreement-grid"
             variants={stagger.container}
-            initial="initial"
+            initial={false}
             animate="animate"
           >
             {filtered.map(([id, agreement]) => (

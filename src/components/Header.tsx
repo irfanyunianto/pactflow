@@ -1,6 +1,5 @@
 import React from 'react'
 import { ConnectKitButton } from 'connectkit'
-import { motion } from 'framer-motion'
 import { ChevronDown, LayoutGrid, Plus, Wallet } from 'lucide-react'
 import { BrandMark } from '@/components/visuals/ProtocolVisuals'
 
@@ -19,15 +18,14 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
         borderColor: 'var(--border)',
       }}
     >
-      <div className="mx-auto flex h-[68px] w-full max-w-[1180px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="app-container flex h-[68px] items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-5">
-          <motion.button
+          <button
             onClick={onLogoClick}
             className="group flex shrink-0 items-center gap-2.5"
-            whileTap={{ scale: 0.97 }}
             aria-label="PactFlow dashboard"
           >
-            <BrandMark className="transition-transform group-hover:scale-[1.04]" />
+            <BrandMark />
             <div className="text-left">
               <span className="display block text-[15px] font-bold leading-tight" style={{ color: 'var(--ink)' }}>
                 PactFlow
@@ -36,7 +34,7 @@ export function Header({ onLogoClick, onCreate, activeView }: HeaderProps) {
                 Milestone workspace
               </span>
             </div>
-          </motion.button>
+          </button>
 
           <nav className="hidden items-center gap-1 border-l pl-5 sm:flex" style={{ borderColor: 'var(--border)' }} aria-label="Primary navigation">
             <button className="nav-link" data-active={activeView === 'dashboard'} onClick={onLogoClick}>
