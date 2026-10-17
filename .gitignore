@@ -6,6 +6,8 @@ dist/
 .vite/
 
 # Uploaded archives and diagnostic artifacts
+artifacts/
+logs/
 *.zip
 *.log
 *.jsonl
@@ -18,6 +20,7 @@ contracts/cache/
 
 # Environment — never commit real credentials
 .env
+.env.*
 .env.local
 .env.*.local
 # Keep the example file tracked
