@@ -114,7 +114,7 @@ button:focus-visible, a:focus-visible {
   padding-inline: 1rem;
 }
 
-.page-shell { padding-block: 2.25rem 6rem; }
+.page-shell { padding-block: 2.25rem; }
 .page-shell--reading { max-width: 1240px; }
 .dashboard-hero { display: grid; align-items: center; gap: 2.25rem; }
 .dashboard-hero > * { min-width: 0; }
@@ -496,9 +496,7 @@ input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 
 @media (max-width: 639px) {
   :root { --ambient-x: 108%; --ambient-y: 760px; }
-  .page-shell { padding-top: 1.5rem; padding-bottom: 5rem; }
-  .studio-watermark { width: 2rem; height: 2rem; justify-content: center; padding: 0 !important; }
-  .studio-watermark span { display: none; }
+  .page-shell { padding-block: 1.5rem; }
   .flow-demo { box-shadow: inset 0 1px 0 rgba(231, 218, 247, 0.06), 4px 5px 0 #211e27; }
   .flow-demo > svg { display: none; }
   .flow-demo__header { padding-inline: 0.8rem; letter-spacing: 0.04em; }
